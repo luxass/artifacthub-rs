@@ -1,0 +1,23 @@
+name: Update Homebrew Tap
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  update-formula:
+    uses: luxass/shared-workflows/.github/workflows/reusable-homebrew-tap.yaml@v0.7.0
+    with:
+      tap-repository: luxass/homebrew-tap
+      formula-path: Formula/artifacthub-mcp.rb
+      formula-name: artifacthub-mcp
+      environment: homebrew-tap
+    secrets:
+      app-id: ${{ secrets.HOMEBREW_TAP_APP_ID }}
+      app-private-key: ${{ secrets.HOMEBREW_TAP_APP_PRIVATE_KEY }}
