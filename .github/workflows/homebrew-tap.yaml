@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   update-formula:
-    uses: luxass/shared-workflows/.github/workflows/reusable-homebrew-tap.yaml@v0.7.0
+    uses: luxass/shared-workflows/.github/workflows/reusable-homebrew-tap.yaml@a327a7b99997e8343ac297c4527bd136c495da13 # v0.7.1
     with:
       tap-repository: luxass/homebrew-tap
       formula-path: Formula/artifacthub-mcp.rb
