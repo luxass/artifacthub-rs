@@ -13,8 +13,9 @@ concurrency:
 jobs:
   update-formula:
     permissions:
-      contents: read
-    uses: luxass/shared-workflows/.github/workflows/reusable-homebrew-tap.yaml@a8c7a9cba106c0d3c5c3267a17e7865a380c9779 # v0.7.3
+      contents: write
+      pull-requests: write
+    uses: luxass/shared-workflows/.github/workflows/reusable-homebrew-tap.yaml@73bac8b0a88831c8e83b83ea03f906036520df87 # v0.7.3
     with:
       tap-repository: luxass/homebrew-tap
       formula-path: Formula/artifacthub-mcp.rb
