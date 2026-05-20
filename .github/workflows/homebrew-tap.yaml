@@ -12,6 +12,8 @@ concurrency:
 
 jobs:
   update-formula:
+    permissions:
+      contents: read
     uses: luxass/shared-workflows/.github/workflows/reusable-homebrew-tap.yaml@1cee29b38405faf686897dfe9ef5f12416613bc2 # v0.7.2
     with:
       tap-repository: luxass/homebrew-tap
