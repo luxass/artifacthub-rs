@@ -1,5 +1,4 @@
 mod client;
-mod format;
 mod kind;
 mod tools;
 

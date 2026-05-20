@@ -12,9 +12,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  guard:
+    name: Release guard
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment:
+      name: release-guard
+      deployment: false
+    steps:
+      - run: echo "Release guard passed"
+
   build:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
+    needs: guard
     permissions:
       contents: read
     strategy:
@@ -23,12 +35,16 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            archive: tar.gz
           - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
+            archive: tar.gz
           - os: macos-15-intel
             target: x86_64-apple-darwin
-          - os: macos-latest
+            archive: tar.gz
+          - os: macos-14
             target: aarch64-apple-darwin
+            archive: tar.gz
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -59,6 +75,7 @@ jobs:
         shell: bash
         env:
           TARGET: ${{ matrix.target }}
+          ARCHIVE: ${{ matrix.archive }}
         run: |
           set -euo pipefail
           version="${GITHUB_REF_NAME#v}"
@@ -66,10 +83,19 @@ jobs:
           bin="target/${TARGET}/release/artifacthub-mcp"
 
           mkdir -p dist
-          mkdir -p "${name}"
-          cp LICENSE "${name}/"
-          cp "${bin}" "${name}/"
-          tar -C . -czf "dist/${name}.tar.gz" "${name}"
+          if [ "${ARCHIVE}" = "zip" ]; then
+            bin="${bin}.exe"
+            mkdir -p "${name}"
+            cp LICENSE "${name}/"
+            cp "${bin}" "${name}/"
+            cd "${name}"
+            zip -r "../dist/${name}.zip" .
+          else
+            mkdir -p "${name}"
+            cp LICENSE "${name}/"
+            cp "${bin}" "${name}/"
+            tar -C . -czf "dist/${name}.tar.gz" "${name}"
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -105,13 +131,48 @@ jobs:
           path: dist/SHA256SUMS
           retention-days: 1
 
+  publish-crate:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: guard
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: release
+      deployment: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust
+        run: rustup default stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          lookup-only: true
+
+      - uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe # v1.0.4
+        id: auth
+
+      - name: Publish
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [build, checksums]
+    needs: [checksums, publish-crate]
     permissions:
       # create and upload release assets
       contents: write
+    environment:
+      name: release
+      deployment: false
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -131,9 +192,19 @@ jobs:
           name: checksums
           path: dist
 
+      - name: generate app token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+
       - name: Create release
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
           tag="${GITHUB_REF_NAME}"
