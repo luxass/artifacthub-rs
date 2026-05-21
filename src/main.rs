@@ -21,7 +21,10 @@ async fn main() -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("Failed to create HTTP client: {}", e))?;
 
     let server = ArtifactHubServer {
-        client: ArtifactHubClient { client },
+        client: ArtifactHubClient {
+            client,
+            ..Default::default()
+        },
     }
     .serve(stdio())
     .await?;

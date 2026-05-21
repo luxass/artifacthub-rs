@@ -1,19 +1,18 @@
-const API_BASE: &str = "https://artifacthub.io/api/v1";
+const DEFAULT_API_BASE: &str = "https://artifacthub.io/api/v1";
 
 #[derive(Clone)]
 pub struct ArtifactHubClient {
     pub client: reqwest::Client,
+    pub base_url: String,
 }
 
-pub fn build_url(path: &str, params: &[(String, String)]) -> String {
-    if params.is_empty() {
-        return format!("{}{}", API_BASE, path);
+impl Default for ArtifactHubClient {
+    fn default() -> Self {
+        Self {
+            client: reqwest::Client::new(),
+            base_url: DEFAULT_API_BASE.to_string(),
+        }
     }
-    let encoded: Vec<String> = params
-        .iter()
-        .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(v)))
-        .collect();
-    format!("{}{}?{}", API_BASE, path, encoded.join("&"))
 }
 
 pub fn package_url(kind: &str, repo: &str, name: &str, suffix: &str) -> String {
@@ -21,6 +20,17 @@ pub fn package_url(kind: &str, repo: &str, name: &str, suffix: &str) -> String {
 }
 
 impl ArtifactHubClient {
+    pub fn build_url(&self, path: &str, params: &[(String, String)]) -> String {
+        if params.is_empty() {
+            return format!("{}{}", self.base_url, path);
+        }
+        let encoded: Vec<String> = params
+            .iter()
+            .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(v)))
+            .collect();
+        format!("{}{}?{}", self.base_url, path, encoded.join("&"))
+    }
+
     pub async fn get(&self, url: &str) -> Result<String, String> {
         let resp = self
             .client
