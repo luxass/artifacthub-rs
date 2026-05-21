@@ -18,9 +18,7 @@ MCP server for [Artifact Hub](https://artifacthub.io) — search packages, get d
 ### Homebrew (macOS and Linux)
 
 ```sh
-brew tap luxass/homebrew-tap
-brew tap luxass/homebrew-tap
-brew install artifacthub-mcp
+brew install luxass/homebrew-tap/artifacthub-mcp
 ```
 
 ### Cargo
