@@ -1,19 +1,18 @@
-const API_BASE: &str = "https://artifacthub.io/api/v1";
+const DEFAULT_API_BASE: &str = "https://artifacthub.io/api/v1";
 
 #[derive(Clone)]
 pub struct ArtifactHubClient {
     pub client: reqwest::Client,
+    pub base_url: String,
 }
 
-pub fn build_url(path: &str, params: &[(String, String)]) -> String {
-    if params.is_empty() {
-        return format!("{}{}", API_BASE, path);
+impl Default for ArtifactHubClient {
+    fn default() -> Self {
+        Self {
+            client: reqwest::Client::new(),
+            base_url: DEFAULT_API_BASE.to_string(),
+        }
     }
-    let encoded: Vec<String> = params
-        .iter()
-        .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(v)))
-        .collect();
-    format!("{}{}?{}", API_BASE, path, encoded.join("&"))
 }
 
 pub fn package_url(kind: &str, repo: &str, name: &str, suffix: &str) -> String {
@@ -21,6 +20,18 @@ pub fn package_url(kind: &str, repo: &str, name: &str, suffix: &str) -> String {
 }
 
 impl ArtifactHubClient {
+    pub fn build_url(&self, path: &str, params: &[(String, String)]) -> String {
+        let base = self.base_url.strip_suffix('/').unwrap_or(&self.base_url);
+        if params.is_empty() {
+            return format!("{}{}", base, path);
+        }
+        let encoded: Vec<String> = params
+            .iter()
+            .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(v)))
+            .collect();
+        format!("{}{}?{}", base, path, encoded.join("&"))
+    }
+
     pub async fn get(&self, url: &str) -> Result<String, String> {
         let resp = self
             .client
@@ -64,5 +75,40 @@ impl ArtifactHubClient {
 
         let bytes = resp.bytes().await.map_err(|e| format!("Failed to read response: {}", e))?;
         Ok(bytes.to_vec())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn client_with_base(base: &str) -> ArtifactHubClient {
+        ArtifactHubClient {
+            client: reqwest::Client::new(),
+            base_url: base.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_build_url_no_trailing_slash() {
+        let client = client_with_base("https://example.com/api/v1");
+        let url = client.build_url("/packages/helm/repo/pkg", &[]);
+        assert_eq!(url, "https://example.com/api/v1/packages/helm/repo/pkg");
+    }
+
+    #[test]
+    fn test_build_url_trailing_slash_stripped() {
+        let client = client_with_base("https://example.com/api/v1/");
+        let url = client.build_url("/packages/helm/repo/pkg", &[]);
+        assert_eq!(url, "https://example.com/api/v1/packages/helm/repo/pkg");
+        assert!(!url.contains("//packages"));
+    }
+
+    #[test]
+    fn test_build_url_with_params() {
+        let client = client_with_base("https://example.com/api/v1/");
+        let url = client.build_url("/packages/search", &[("q".to_string(), "nginx".to_string())]);
+        assert_eq!(url, "https://example.com/api/v1/packages/search?q=nginx");
+        assert!(!url.contains("//packages"));
     }
 }
