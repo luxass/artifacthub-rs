@@ -15,12 +15,13 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    uses: luxass/shared-workflows/.github/workflows/reusable-homebrew-tap.yaml@73bac8b0a88831c8e83b83ea03f906036520df87 # v0.7.3
+    uses: luxass/shared-workflows/.github/workflows/reusable-homebrew-tap.yaml@8f6ed041e122ab727c57b17fa0a5a2929a9ed4e0 # v0.7.4
     with:
       tap-repository: luxass/homebrew-tap
       formula-path: Formula/artifacthub-mcp.rb
       formula-name: artifacthub-mcp
       environment: homebrew-tap
+      targets: '["aarch64-apple-darwin", "x86_64-apple-darwin", "aarch64-unknown-linux-musl", "x86_64-unknown-linux-musl"]'
     secrets:
       app-id: ${{ secrets.HOMEBREW_TAP_APP_ID }}
       app-private-key: ${{ secrets.HOMEBREW_TAP_APP_PRIVATE_KEY }}
