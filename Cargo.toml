@@ -1,6 +1,6 @@
 [package]
 name = "artifacthub-mcp"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2024"
 license = "MIT"
 description = "CLI to interact with Artifact Hub, providing package search, details, and management functionalities"
