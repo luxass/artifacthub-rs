@@ -21,7 +21,7 @@ jobs:
       formula-path: Formula/artifacthub-mcp.rb
       formula-name: artifacthub-mcp
       environment: homebrew-tap
-      targets: '["aarch64-apple-darwin", "x86_64-apple-darwin", "aarch64-unknown-linux-musl", "x86_64-unknown-linux-musl"]'
+      targets: '["aarch64-apple-darwin", "x86_64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu"]'
     secrets:
       app-id: ${{ secrets.HOMEBREW_TAP_APP_ID }}
       app-private-key: ${{ secrets.HOMEBREW_TAP_APP_PRIVATE_KEY }}
