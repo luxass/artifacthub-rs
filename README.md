@@ -15,6 +15,18 @@ MCP server for [Artifact Hub](https://artifacthub.io) — search packages, get d
 
 ## Installation
 
+### Install script
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/luxass/artifacthub-mcp/main/install.sh | sh
+```
+
+Or with a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/luxass/artifacthub-mcp/main/install.sh | ARTIFACTHUB_MCP_VERSION=0.1.4 sh
+```
+
 ### Homebrew
 
 ```bash
