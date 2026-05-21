@@ -133,7 +133,7 @@ pub async fn handle_get_package(
 mod tests {
     use super::*;
     use crate::client::ArtifactHubClient;
-    use wiremock::matchers::{method, path};
+    use wiremock::matchers::{method, path, query_param};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     fn test_server(base_url: &str) -> ArtifactHubServer {
@@ -209,6 +209,7 @@ mod tests {
 
         Mock::given(method("GET"))
             .and(path("/packages/helm/bitnami/nginx"))
+            .and(query_param("version", "14.0.0"))
             .respond_with(ResponseTemplate::new(200).set_body_json(sample_package_json()))
             .mount(&mock_server)
             .await;

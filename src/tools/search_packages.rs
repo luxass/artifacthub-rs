@@ -74,6 +74,12 @@ pub async fn handle_search_packages(
     server: &ArtifactHubServer,
     params: SearchParams,
 ) -> Result<Json<SearchResponse>, String> {
+    if let Some(limit) = params.limit {
+        if limit == 0 || limit > 60 {
+            return Err("limit must be between 1 and 60".to_string());
+        }
+    }
+
     let mut query_params = vec![];
 
     if let Some(q) = &params.q {
@@ -189,5 +195,47 @@ mod tests {
         let Err(err) = result else { panic!("expected error") };
         assert!(err.contains("Unknown kind"));
         assert!(err.contains("Valid kinds"));
+    }
+
+    #[tokio::test]
+    async fn test_search_packages_limit_too_high() {
+        let server = test_server("http://localhost:12345");
+        let result = handle_search_packages(
+            &server,
+            SearchParams {
+                q: None,
+                kind: None,
+                repo: None,
+                org: None,
+                limit: Some(61),
+                offset: None,
+            },
+        )
+        .await;
+
+        assert!(result.is_err());
+        let Err(err) = result else { panic!("expected error") };
+        assert!(err.contains("limit must be between 1 and 60"));
+    }
+
+    #[tokio::test]
+    async fn test_search_packages_limit_zero() {
+        let server = test_server("http://localhost:12345");
+        let result = handle_search_packages(
+            &server,
+            SearchParams {
+                q: None,
+                kind: None,
+                repo: None,
+                org: None,
+                limit: Some(0),
+                offset: None,
+            },
+        )
+        .await;
+
+        assert!(result.is_err());
+        let Err(err) = result else { panic!("expected error") };
+        assert!(err.contains("limit must be between 1 and 60"));
     }
 }

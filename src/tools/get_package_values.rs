@@ -57,7 +57,7 @@ pub async fn handle_get_package_values(
             .path()
             .map_err(|e| format!("Failed to get entry path: {}", e))?;
 
-        if path.ends_with("values.yaml") {
+        if path.ends_with("values.yaml") && path.components().count() == 2 {
             let mut contents = String::new();
             entry
                 .read_to_string(&mut contents)
