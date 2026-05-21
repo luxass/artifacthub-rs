@@ -92,7 +92,7 @@ resolve_latest_version() {
 install_via_brew() {
     if command -v brew >/dev/null 2>&1; then
         echo "detected Homebrew, installing via brew..."
-        brew install luxass/tap/artifacthub-mcp
+        brew install luxass/homebrew-tap/artifacthub-mcp
         return 0
     fi
     return 1

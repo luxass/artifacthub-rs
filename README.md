@@ -13,34 +13,33 @@ MCP server for [Artifact Hub](https://artifacthub.io) — search packages, get d
 | `get_package_star_stats` | View star history and growth |
 | `get_package_values` | Extract `values.yaml` from a Helm chart |
 
-## Installation
+## Install
 
-### Install script
+### Homebrew (macOS and Linux)
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/luxass/artifacthub-mcp/main/install.sh | sh
-```
-
-Or with a specific version:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/luxass/artifacthub-mcp/main/install.sh | ARTIFACTHUB_MCP_VERSION=0.1.4 sh
-```
-
-### Homebrew
-
-```bash
+```sh
+brew tap luxass/homebrew-tap
 brew tap luxass/homebrew-tap
 brew install artifacthub-mcp
 ```
 
-### From source
+### Cargo
 
-```bash
-git clone https://github.com/luxass/artifacthub-mcp.git
-cd artifacthub-mcp
-cargo install --path .
+```sh
+cargo install --locked artifacthub-mcp
 ```
+
+### Install Script
+
+macOS and Linux:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/luxass/artifacthub-mcp/main/install.sh | sh
+```
+
+The installer uses Homebrew if available, otherwise downloads the correct release for your platform and installs `artifacthub-mcp` into `~/.local/bin` by default.
+
+You can override the target directory with `ARTIFACTHUB_MCP_INSTALL_DIR`, and pin a specific release with `ARTIFACTHUB_MCP_VERSION`.
 
 ## Usage
 
