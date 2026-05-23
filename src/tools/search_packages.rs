@@ -192,7 +192,9 @@ mod tests {
         .await;
 
         assert!(result.is_err());
-        let Err(err) = result else { panic!("expected error") };
+        let Err(err) = result else {
+            panic!("expected error")
+        };
         assert!(err.contains("Unknown kind"));
         assert!(err.contains("Valid kinds"));
     }
@@ -214,7 +216,9 @@ mod tests {
         .await;
 
         assert!(result.is_err());
-        let Err(err) = result else { panic!("expected error") };
+        let Err(err) = result else {
+            panic!("expected error")
+        };
         assert!(err.contains("limit must be between 1 and 60"));
     }
 
@@ -235,7 +239,9 @@ mod tests {
         .await;
 
         assert!(result.is_err());
-        let Err(err) = result else { panic!("expected error") };
+        let Err(err) = result else {
+            panic!("expected error")
+        };
         assert!(err.contains("limit must be between 1 and 60"));
     }
 }

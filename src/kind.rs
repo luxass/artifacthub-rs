@@ -32,9 +32,29 @@ pub fn to_id(kind: &str) -> Option<i32> {
 
 pub fn valid_kinds() -> &'static [&'static str] {
     &[
-        "helm", "falco", "opa", "olm", "tekton", "krew", "helm-plugin", "gatekeeper",
-        "keptn", "tinkerbell", "cni", "contour", "keda", "coredns", "operator",
-        "kubewarden", "inspektor-gadget", "kubearmor", "backstage", "headlamp",
-        "kpt", "kubeescape", "argo-template", "helm-oci",
+        "helm",
+        "falco",
+        "opa",
+        "olm",
+        "tekton",
+        "krew",
+        "helm-plugin",
+        "gatekeeper",
+        "keptn",
+        "tinkerbell",
+        "cni",
+        "contour",
+        "keda",
+        "coredns",
+        "operator",
+        "kubewarden",
+        "inspektor-gadget",
+        "kubearmor",
+        "backstage",
+        "headlamp",
+        "kpt",
+        "kubeescape",
+        "argo-template",
+        "helm-oci",
     ]
 }

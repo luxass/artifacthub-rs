@@ -7,8 +7,8 @@ mod get_package_versions;
 mod get_server_info;
 mod search_packages;
 
-use rmcp::{handler::server::wrapper::Parameters, tool, tool_router};
 use rmcp::handler::server::wrapper::Json;
+use rmcp::{handler::server::wrapper::Parameters, tool, tool_router};
 
 use crate::client::ArtifactHubClient;
 
@@ -27,7 +27,9 @@ impl ArtifactHubServer {
         get_server_info::handle_get_server_info(self, p).await
     }
 
-    #[tool(description = "Search for packages in Artifact Hub. Results are ranked by popularity/stars.")]
+    #[tool(
+        description = "Search for packages in Artifact Hub. Results are ranked by popularity/stars."
+    )]
     async fn search_packages(
         &self,
         Parameters(p): Parameters<search_packages::SearchParams>,
@@ -35,7 +37,9 @@ impl ArtifactHubServer {
         search_packages::handle_search_packages(self, p).await
     }
 
-    #[tool(description = "Get metadata summary for a package (name, version, description, repository, stats, keywords, links, containers, security). Does NOT include readme or available_versions.")]
+    #[tool(
+        description = "Get metadata summary for a package (name, version, description, repository, stats, keywords, links, containers, security). Does NOT include readme or available_versions."
+    )]
     async fn get_package(
         &self,
         Parameters(p): Parameters<get_package::GetPackageParams>,
@@ -43,7 +47,9 @@ impl ArtifactHubServer {
         get_package::handle_get_package(self, p).await
     }
 
-    #[tool(description = "Get the README for a package (can be very large, 100KB+). Use sparingly - prefer get_package for metadata.")]
+    #[tool(
+        description = "Get the README for a package (can be very large, 100KB+). Use sparingly - prefer get_package for metadata."
+    )]
     async fn get_package_readme(
         &self,
         Parameters(p): Parameters<get_package_readme::GetPackageReadmeParams>,

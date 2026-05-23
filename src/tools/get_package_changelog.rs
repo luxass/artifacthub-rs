@@ -46,9 +46,10 @@ pub async fn handle_get_package_changelog(
         query_params.push(("from".to_string(), from.clone()));
     }
 
-    let url = server
-        .client
-        .build_url(&package_url(&params.kind, &params.repo, &params.name, "/changelog"), &query_params);
+    let url = server.client.build_url(
+        &package_url(&params.kind, &params.repo, &params.name, "/changelog"),
+        &query_params,
+    );
     let json = server.client.get_json(&url).await?;
 
     let entries: Vec<ChangelogEntry> =

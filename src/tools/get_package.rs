@@ -119,9 +119,10 @@ pub async fn handle_get_package(
         query_params.push(("version".to_string(), version.clone()));
     }
 
-    let url = server
-        .client
-        .build_url(&package_url(&params.kind, &params.repo, &params.name, ""), &query_params);
+    let url = server.client.build_url(
+        &package_url(&params.kind, &params.repo, &params.name, ""),
+        &query_params,
+    );
     let json = server.client.get_json(&url).await?;
     let summary: PackageSummary =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;

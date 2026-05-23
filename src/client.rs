@@ -73,7 +73,10 @@ impl ArtifactHubClient {
             return Err(format!("Download error {}: {}", status, status));
         }
 
-        let bytes = resp.bytes().await.map_err(|e| format!("Failed to read response: {}", e))?;
+        let bytes = resp
+            .bytes()
+            .await
+            .map_err(|e| format!("Failed to read response: {}", e))?;
         Ok(bytes.to_vec())
     }
 }
@@ -107,7 +110,10 @@ mod tests {
     #[test]
     fn test_build_url_with_params() {
         let client = client_with_base("https://example.com/api/v1/");
-        let url = client.build_url("/packages/search", &[("q".to_string(), "nginx".to_string())]);
+        let url = client.build_url(
+            "/packages/search",
+            &[("q".to_string(), "nginx".to_string())],
+        );
         assert_eq!(url, "https://example.com/api/v1/packages/search?q=nginx");
         assert!(!url.contains("//packages"));
     }

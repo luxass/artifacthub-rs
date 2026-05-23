@@ -35,14 +35,15 @@ pub async fn handle_get_package_values(
         query_params.push(("version".to_string(), version.clone()));
     }
 
-    let pkg_url = server
-        .client
-        .build_url(&package_url(&params.kind, &params.repo, &params.name, ""), &query_params);
+    let pkg_url = server.client.build_url(
+        &package_url(&params.kind, &params.repo, &params.name, ""),
+        &query_params,
+    );
     let json = server.client.get_json(&pkg_url).await?;
 
-    let content_url = json["content_url"]
-        .as_str()
-        .ok_or("No content_url found for this package. Values are only available for Helm charts.")?;
+    let content_url = json["content_url"].as_str().ok_or(
+        "No content_url found for this package. Values are only available for Helm charts.",
+    )?;
 
     let version = json["version"].as_str().unwrap_or("unknown").to_string();
 
@@ -51,7 +52,10 @@ pub async fn handle_get_package_values(
     let decoder = flate2::read::GzDecoder::new(&tarball[..]);
     let mut archive = tar::Archive::new(decoder);
 
-    for entry in archive.entries().map_err(|e| format!("Failed to read tarball: {}", e))? {
+    for entry in archive
+        .entries()
+        .map_err(|e| format!("Failed to read tarball: {}", e))?
+    {
         let mut entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
         let path = entry
             .path()
@@ -71,15 +75,18 @@ pub async fn handle_get_package_values(
         }
     }
 
-    Err(format!("values.yaml not found in {}@{}", params.name, version))
+    Err(format!(
+        "values.yaml not found in {}@{}",
+        params.name, version
+    ))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::client::ArtifactHubClient;
-    use flate2::write::GzEncoder;
     use flate2::Compression;
+    use flate2::write::GzEncoder;
     use tar::Builder;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -175,7 +182,9 @@ mod tests {
         .await;
 
         assert!(result.is_err());
-        let Err(err) = result else { panic!("expected error") };
+        let Err(err) = result else {
+            panic!("expected error")
+        };
         assert!(err.contains("No content_url"));
     }
 }
