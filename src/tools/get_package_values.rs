@@ -85,8 +85,10 @@ pub async fn handle_get_package_values(
 mod tests {
     use super::*;
     use crate::client::ArtifactHubClient;
+    use crate::tools::ALL_TOOL_NAMES;
     use flate2::Compression;
     use flate2::write::GzEncoder;
+    use std::collections::HashSet;
     use tar::Builder;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -97,6 +99,7 @@ mod tests {
                 client: reqwest::Client::new(),
                 base_url: base_url.to_string(),
             },
+            enabled_tools: ALL_TOOL_NAMES.iter().map(|s| s.to_string()).collect::<HashSet<_>>(),
         }
     }
 
