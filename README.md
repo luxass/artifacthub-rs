@@ -67,20 +67,37 @@ Add to your `codex.json`:
 
 ## Tools
 
+### Discovery
+
 | Tool | Description |
 |------|-------------|
 | `search_packages` | Search for packages by query, kind, repo, or org |
 | `search_repositories` | Search repositories by name, kind, user, or org |
+
+### Package Details
+
+| Tool | Description |
+|------|-------------|
 | `get_package` | Get metadata summary for a package |
 | `get_package_readme` | Get the README content for a package |
 | `get_package_versions` | List all available versions for a package |
 | `get_package_changelog` | Get changelog between versions (JSON) |
 | `get_changelog_md` | Get changelog as pre-formatted markdown |
 | `get_package_star_stats` | View star history and growth |
+
+### Helm Charts
+
+| Tool | Description |
+|------|-------------|
 | `get_package_values` | Extract `values.yaml` from a Helm chart |
 | `get_package_values_schema` | Get JSON schema for Helm chart values |
-| `get_package_security_report` | Get detailed security report with CVEs |
 | `get_package_templates` | List Kubernetes resources a chart creates |
+
+### Security
+
+| Tool | Description |
+|------|-------------|
+| `get_package_security_report` | Get detailed security report with CVEs |
 
 ## Examples
 
@@ -99,6 +116,30 @@ Once connected, ask your assistant things like:
 ## Supported Package Kinds
 
 helm, falco, opa, olm, tekton, krew, helm-plugin, gatekeeper, keptn, tinkerbell, cni, contour, keda, coredns, operator, kubewarden, inspektor-gadget, kubearmor, backstage, headlamp, kpt, kubeescape, argo-template, helm-oci
+
+## Contributing
+
+Contributions are welcome! Here are some ways to help:
+
+- Report bugs or request features via [GitHub Issues](https://github.com/luxass/artifacthub-mcp/issues)
+- Submit pull requests for bug fixes or new tools
+- Improve documentation and examples
+
+### Development
+
+```sh
+# Run tests
+cargo test
+
+# Format code
+cargo fmt
+
+# Lint
+cargo clippy
+
+# Run all CI checks
+just ci
+```
 
 ## License
 
