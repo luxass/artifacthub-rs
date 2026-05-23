@@ -66,7 +66,12 @@ pub async fn handle_get_security_report(
     server: &ArtifactHubServer,
     params: GetSecurityReportParams,
 ) -> Result<Json<SecurityReport>, String> {
-    let mut path = format!("/packages/{}/{}", params.package_id, params.version.as_deref().unwrap_or(""));
+    let path = if let Some(ref version) = params.version {
+        format!("/packages/{}/{}", params.package_id, version)
+    } else {
+        format!("/packages/{}", params.package_id)
+    };
+    let mut path = path;
     path.push_str("/security-report");
 
     let url = server.client.build_url(&path, &[]);
@@ -149,7 +154,7 @@ mod tests {
         let mock_server = MockServer::start().await;
 
         Mock::given(method("GET"))
-            .and(path("/packages/pkg-123//security-report"))
+            .and(path("/packages/pkg-123/security-report"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
                 "summary": {
                     "critical": 0,

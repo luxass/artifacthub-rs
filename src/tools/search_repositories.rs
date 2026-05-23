@@ -38,10 +38,6 @@ pub struct SearchRepositoryResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub private: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub auth_user: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub auth_pass: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub branches: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disabled: Option<bool>,
@@ -121,7 +117,7 @@ mod tests {
     use crate::client::ArtifactHubClient;
     use crate::tools::ALL_TOOL_NAMES;
     use std::collections::HashSet;
-    use wiremock::matchers::{method, path};
+    use wiremock::matchers::{method, path, query_param};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     fn test_server(base_url: &str) -> ArtifactHubServer {
@@ -140,6 +136,9 @@ mod tests {
 
         Mock::given(method("GET"))
             .and(path("/repositories/search"))
+            .and(query_param("name", "bitnami"))
+            .and(query_param("kind", "0"))
+            .and(query_param("limit", "10"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
                 "repositories": [
                     {

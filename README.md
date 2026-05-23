@@ -119,7 +119,7 @@ Add to your `opencode.json`:
 
 For quick installation, use one of the one-click install buttons below...
 
-[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=artifacthub&config=%7B%22command%22%3A%22artifacthub-mcp%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=artifacthub&config=%7B%22command%22%3A%22artifacthub-mcp%22%7D&quality=insiders)
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=artifacthub&config=%7B%22command%22%3A%22artifacthub-mcp%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=artifacthub&config=%7B%22command%22%3A%22artifacthub-mcp%22%7D&quality=insiders)
 
 For manual installation, add to your User Settings (JSON):
 

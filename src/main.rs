@@ -35,7 +35,7 @@ fn resolve_enabled_tools(args: &Args) -> Result<HashSet<String>, String> {
     }
 
     if let Some(ref tool_list) = args.tools {
-        let set: HashSet<String> = tool_list.iter().cloned().collect();
+        let set: HashSet<String> = tool_list.iter().map(|s| s.trim().to_string()).collect();
         let all: HashSet<&str> = ALL_TOOL_NAMES.iter().copied().collect();
         for t in &set {
             if !all.contains(t.as_str()) {
@@ -50,7 +50,7 @@ fn resolve_enabled_tools(args: &Args) -> Result<HashSet<String>, String> {
     }
 
     if let Some(ref exclude_list) = args.exclude_tools {
-        let exclude: HashSet<String> = exclude_list.iter().cloned().collect();
+        let exclude: HashSet<String> = exclude_list.iter().map(|s| s.trim().to_string()).collect();
         let all: HashSet<&str> = ALL_TOOL_NAMES.iter().copied().collect();
         for t in &exclude {
             if !all.contains(t.as_str()) {
