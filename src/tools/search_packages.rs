@@ -74,10 +74,10 @@ pub async fn handle_search_packages(
     server: &ArtifactHubServer,
     params: SearchParams,
 ) -> Result<Json<SearchResponse>, String> {
-    if let Some(limit) = params.limit {
-        if limit == 0 || limit > 60 {
-            return Err("limit must be between 1 and 60".to_string());
-        }
+    if let Some(limit) = params.limit
+        && (limit == 0 || limit > 60)
+    {
+        return Err("limit must be between 1 and 60".to_string());
     }
 
     let mut query_params = vec![];

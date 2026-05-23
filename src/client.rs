@@ -44,10 +44,10 @@ impl ArtifactHubClient {
         let body = resp.text().await.map_err(|e| e.to_string())?;
 
         if !status.is_success() {
-            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&body) {
-                if let Some(msg) = json.get("message").and_then(|m| m.as_str()) {
-                    return Err(format!("API error {}: {}", status, msg));
-                }
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&body)
+                && let Some(msg) = json.get("message").and_then(|m| m.as_str())
+            {
+                return Err(format!("API error {}: {}", status, msg));
             }
             return Err(format!("API error {}: {}", status, body));
         }
