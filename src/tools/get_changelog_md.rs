@@ -61,7 +61,10 @@ mod tests {
                 client: reqwest::Client::new(),
                 base_url: base_url.to_string(),
             },
-            enabled_tools: ALL_TOOL_NAMES.iter().map(|s| s.to_string()).collect::<HashSet<_>>(),
+            enabled_tools: ALL_TOOL_NAMES
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<HashSet<_>>(),
         }
     }
 
@@ -71,9 +74,10 @@ mod tests {
 
         Mock::given(method("GET"))
             .and(path("/packages/helm/bitnami/nginx/changelog.md"))
-            .respond_with(ResponseTemplate::new(200).set_body_string(
-                "# Changelog\n\n## 1.0.0\n- Initial release",
-            ))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_string("# Changelog\n\n## 1.0.0\n- Initial release"),
+            )
             .mount(&mock_server)
             .await;
 

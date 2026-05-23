@@ -36,7 +36,10 @@ mod tests {
     async fn test_server_info_returns_expected_fields() {
         let server = ArtifactHubServer {
             client: ArtifactHubClient::default(),
-            enabled_tools: ALL_TOOL_NAMES.iter().map(|s| s.to_string()).collect::<HashSet<_>>(),
+            enabled_tools: ALL_TOOL_NAMES
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<HashSet<_>>(),
         };
         let result = handle_get_server_info(&server, GetServerInfoParams {})
             .await

@@ -103,7 +103,9 @@ pub async fn handle_search_repositories(
         query_params.push(("offset".to_string(), offset.to_string()));
     }
 
-    let url = server.client.build_url("/repositories/search", &query_params);
+    let url = server
+        .client
+        .build_url("/repositories/search", &query_params);
     let json = server.client.get_json(&url).await?;
     let response: SearchRepositoriesResponse =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
@@ -126,7 +128,10 @@ mod tests {
                 client: reqwest::Client::new(),
                 base_url: base_url.to_string(),
             },
-            enabled_tools: ALL_TOOL_NAMES.iter().map(|s| s.to_string()).collect::<HashSet<_>>(),
+            enabled_tools: ALL_TOOL_NAMES
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<HashSet<_>>(),
         }
     }
 

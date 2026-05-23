@@ -64,7 +64,10 @@ mod tests {
                 client: reqwest::Client::new(),
                 base_url: base_url.to_string(),
             },
-            enabled_tools: ALL_TOOL_NAMES.iter().map(|s| s.to_string()).collect::<HashSet<_>>(),
+            enabled_tools: ALL_TOOL_NAMES
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<HashSet<_>>(),
         }
     }
 

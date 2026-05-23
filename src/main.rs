@@ -11,12 +11,20 @@ use rmcp::handler::server::router::Router;
 use rmcp::transport::stdio;
 
 use crate::client::ArtifactHubClient;
-use crate::tools::{ArtifactHubServer, ALL_TOOL_NAMES};
+use crate::tools::{ALL_TOOL_NAMES, ArtifactHubServer};
 
-const USER_AGENT: &str = "artifacthub-mcp/0.1.0";
+const USER_AGENT: &str = concat!(
+    "artifacthub-mcp/",
+    env!("CARGO_PKG_VERSION"),
+    " (+https://github.com/luxass/artifacthub-mcp)"
+);
 
 #[derive(Parser, Debug)]
-#[command(name = "artifacthub-mcp", version, about = "MCP server for Artifact Hub")]
+#[command(
+    name = "artifacthub-mcp",
+    version,
+    about = "MCP server for Artifact Hub"
+)]
 struct Args {
     /// Comma-separated list of tools to enable. If set, only these tools are available.
     /// Cannot be used together with --exclude-tools.
@@ -124,7 +132,10 @@ mod tests {
     #[test]
     fn test_tools_whitelist() {
         let args = Args {
-            tools: Some(vec!["search_packages".to_string(), "get_package".to_string()]),
+            tools: Some(vec![
+                "search_packages".to_string(),
+                "get_package".to_string(),
+            ]),
             exclude_tools: None,
         };
         let result = resolve_enabled_tools(&args).unwrap();

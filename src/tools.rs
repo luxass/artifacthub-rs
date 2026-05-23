@@ -15,10 +15,7 @@ mod search_repositories;
 use std::collections::HashSet;
 
 use rmcp::handler::server::wrapper::Json;
-use rmcp::{
-    handler::server::wrapper::Parameters,
-    tool, tool_handler, tool_router, ServerHandler,
-};
+use rmcp::{ServerHandler, handler::server::wrapper::Parameters, tool, tool_handler, tool_router};
 
 use crate::client::ArtifactHubClient;
 
@@ -153,9 +150,7 @@ impl ArtifactHubServer {
         get_package_values::handle_get_package_values(self, p).await
     }
 
-    #[tool(
-        description = "Search for repositories by name, kind, user, or organization"
-    )]
+    #[tool(description = "Search for repositories by name, kind, user, or organization")]
     async fn search_repositories(
         &self,
         Parameters(p): Parameters<search_repositories::SearchRepositoriesParams>,
