@@ -58,7 +58,7 @@ release version:
 
   # Commit changes
   git add Cargo.toml Cargo.lock
-  git commit -m "Bump version to {{version}}"
+  git commit -m "chore: update to v{{version}}"
 
   # Create and push tag
   git tag "v{{version}}"
