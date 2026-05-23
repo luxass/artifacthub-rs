@@ -23,7 +23,7 @@ lint:
 
 # Run all CI checks
 ci:
-  just fmt --check
+  cargo fmt --check
   just lint
   just test
 
