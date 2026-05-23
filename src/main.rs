@@ -7,6 +7,7 @@ use std::time::Duration;
 
 use clap::Parser;
 use rmcp::ServiceExt;
+use rmcp::handler::server::router::Router;
 use rmcp::transport::stdio;
 
 use crate::client::ArtifactHubClient;
@@ -88,10 +89,18 @@ async fn main() -> anyhow::Result<()> {
             ..Default::default()
         },
         enabled_tools,
+    };
+
+    // Build router (registers all tools via #[tool_router]), then disable unwanted ones
+    let mut router = Router::new(server);
+    for name in ALL_TOOL_NAMES {
+        if !router.service.enabled_tools.contains(*name) {
+            router.tool_router.disable_route(*name);
+        }
     }
-    .serve(stdio())
-    .await?;
-    server.waiting().await?;
+
+    let running = router.serve(stdio()).await?;
+    running.waiting().await?;
     Ok(())
 }
 

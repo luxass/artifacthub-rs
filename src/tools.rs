@@ -15,7 +15,10 @@ mod search_repositories;
 use std::collections::HashSet;
 
 use rmcp::handler::server::wrapper::Json;
-use rmcp::{handler::server::wrapper::Parameters, tool, tool_router};
+use rmcp::{
+    handler::server::wrapper::Parameters,
+    tool, tool_handler, tool_router, ServerHandler,
+};
 
 use crate::client::ArtifactHubClient;
 
@@ -54,7 +57,7 @@ fn tool_disabled_error<T>(name: &str) -> Result<Json<T>, String> {
     ))
 }
 
-#[tool_router(server_handler)]
+#[tool_router]
 impl ArtifactHubServer {
     #[tool(description = "Get basic information about this MCP server")]
     async fn get_server_info(
@@ -215,3 +218,6 @@ impl ArtifactHubServer {
         get_package_templates::handle_get_templates(self, p).await
     }
 }
+
+#[tool_handler]
+impl ServerHandler for ArtifactHubServer {}
