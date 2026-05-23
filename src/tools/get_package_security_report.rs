@@ -81,6 +81,8 @@ pub async fn handle_get_security_report(
 mod tests {
     use super::*;
     use crate::client::ArtifactHubClient;
+    use crate::tools::ALL_TOOL_NAMES;
+    use std::collections::HashSet;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -90,6 +92,7 @@ mod tests {
                 client: reqwest::Client::new(),
                 base_url: base_url.to_string(),
             },
+            enabled_tools: ALL_TOOL_NAMES.iter().map(|s| s.to_string()).collect::<HashSet<_>>(),
         }
     }
 

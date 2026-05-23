@@ -7,6 +7,11 @@ use crate::kind::KIND_DESCRIPTION;
 use crate::tools::ArtifactHubServer;
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
+pub struct StarStats {
+    pub stars: Vec<StarHistoryEntry>,
+}
+
+#[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct StarHistoryEntry {
     pub total: i32,
     pub dates: Vec<StarDateEntry>,
@@ -31,7 +36,7 @@ pub struct GetStarStatsParams {
 pub async fn handle_get_package_star_stats(
     server: &ArtifactHubServer,
     params: GetStarStatsParams,
-) -> Result<Json<Vec<StarHistoryEntry>>, String> {
+) -> Result<Json<StarStats>, String> {
     let url = server.client.build_url(
         &package_url(&params.kind, &params.repo, &params.name, "/stars"),
         &[],
@@ -41,13 +46,15 @@ pub async fn handle_get_package_star_stats(
     let stars: Vec<StarHistoryEntry> =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse star stats: {}", e))?;
 
-    Ok(Json(stars))
+    Ok(Json(StarStats { stars }))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::client::ArtifactHubClient;
+    use crate::tools::ALL_TOOL_NAMES;
+    use std::collections::HashSet;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -57,6 +64,7 @@ mod tests {
                 client: reqwest::Client::new(),
                 base_url: base_url.to_string(),
             },
+            enabled_tools: ALL_TOOL_NAMES.iter().map(|s| s.to_string()).collect::<HashSet<_>>(),
         }
     }
 
@@ -91,8 +99,8 @@ mod tests {
         .await
         .unwrap();
 
-        assert_eq!(result.0.len(), 1);
-        assert_eq!(result.0[0].total, 150);
-        assert_eq!(result.0[0].dates.len(), 3);
+        assert_eq!(result.0.stars.len(), 1);
+        assert_eq!(result.0.stars[0].total, 150);
+        assert_eq!(result.0.stars[0].dates.len(), 3);
     }
 }
