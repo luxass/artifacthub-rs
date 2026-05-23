@@ -80,16 +80,16 @@ fn resolve_enabled_tools(args: &Args) -> Result<HashSet<String>, String> {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    let enabled_tools = resolve_enabled_tools(&args).map_err(|e| anyhow::anyhow!("{}", e))?;
+    let enabled_tools = resolve_enabled_tools(&args).map_err(|e| e.to_string())?;
 
     let client = reqwest::Client::builder()
         .user_agent(USER_AGENT)
         .timeout(Duration::from_secs(30))
         .build()
-        .map_err(|e| anyhow::anyhow!("Failed to create HTTP client: {}", e))?;
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
     let server = ArtifactHubServer {
         client: ArtifactHubClient {
