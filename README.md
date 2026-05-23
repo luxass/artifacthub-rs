@@ -34,6 +34,20 @@ Add to your MCP client configuration:
 }
 ```
 
+### Tool Filtering
+
+Control which tools are exposed to the MCP client:
+
+```bash
+# Enable only specific tools
+artifacthub-mcp --tools search_packages,get_package,get_package_versions
+
+# Exclude specific tools from the default set
+artifacthub-mcp --exclude-tools get_package_star_stats,get_package_security_report
+```
+
+`--tools` and `--exclude-tools` are mutually exclusive. Run `artifacthub-mcp --help` for the full list of available tools.
+
 <details>
 <summary>Claude Code</summary>
 
