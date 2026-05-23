@@ -22,7 +22,68 @@ Pre-built binaries are available for Linux and macOS at [github.com/luxass/artif
 
 ## Setup
 
-### OpenCode
+Add to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "artifacthub": {
+      "command": "artifacthub-mcp"
+    }
+  }
+}
+```
+
+<details>
+<summary>Claude Code</summary>
+
+Add via the Claude Code CLI:
+
+```bash
+claude mcp add artifacthub artifacthub-mcp
+```
+
+Or add to your `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "artifacthub": {
+      "command": "artifacthub-mcp"
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Codex</summary>
+
+Add via the Codex CLI:
+
+```bash
+codex mcp add artifacthub artifacthub-mcp
+```
+
+Or add to your `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.artifacthub]
+command = "artifacthub-mcp"
+```
+
+</details>
+
+<details>
+<summary>Cursor</summary>
+
+Go to `Cursor Settings` → `MCP` → `Add new MCP Server`. Set type to `command` with the command `artifacthub-mcp`.
+
+</details>
+
+<details>
+<summary>OpenCode</summary>
 
 Add to your `opencode.json`:
 
@@ -37,33 +98,30 @@ Add to your `opencode.json`:
 }
 ```
 
-### Claude Code
+</details>
 
-Add to your `.mcp.json` or `~/.claude/settings.json`:
+<details>
+<summary>VS Code</summary>
+
+For quick installation, use one of the one-click install buttons below...
+
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=artifacthub&config=%7B%22command%22%3A%22artifacthub-mcp%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=artifacthub&config=%7B%22command%22%3A%22artifacthub-mcp%22%7D&quality=insiders)
+
+For manual installation, add to your User Settings (JSON):
 
 ```json
 {
-  "mcpServers": {
-    "artifacthub": {
-      "command": "artifacthub-mcp"
+  "mcp": {
+    "servers": {
+      "artifacthub": {
+        "command": "artifacthub-mcp"
+      }
     }
   }
 }
 ```
 
-### Codex
-
-Add to your `codex.json`:
-
-```json
-{
-  "mcpServers": {
-    "artifacthub": {
-      "command": "artifacthub-mcp"
-    }
-  }
-}
-```
+</details>
 
 ## Tools
 
