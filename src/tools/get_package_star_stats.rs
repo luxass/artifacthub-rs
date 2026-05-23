@@ -37,11 +37,8 @@ pub async fn handle_get_package_star_stats(
     server: &ArtifactHubServer,
     params: GetStarStatsParams,
 ) -> Result<Json<StarStats>, String> {
-    let url = server.client.build_url(
-        &package_url(&params.kind, &params.repo, &params.name, "/stars"),
-        &[],
-    );
-    let json = server.client.get_json(&url).await?;
+    let path = package_url(&params.kind, &params.repo, &params.name, "/stars");
+    let json = server.client.get_json(&path, &[]).await?;
 
     let stars: Vec<StarHistoryEntry> =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse star stats: {}", e))?;

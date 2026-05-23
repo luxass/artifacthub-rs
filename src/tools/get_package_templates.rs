@@ -36,11 +36,9 @@ pub async fn handle_get_templates(
     } else {
         format!("/packages/{}", params.package_id)
     };
-    let mut path = path;
-    path.push_str("/templates");
+    let path = format!("{}/templates", path);
 
-    let url = server.client.build_url(&path, &[]);
-    let json = server.client.get_json(&url).await?;
+    let json = server.client.get_json(&path, &[]).await?;
     let templates: ChartTemplates =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 

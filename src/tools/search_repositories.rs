@@ -73,7 +73,7 @@ pub async fn handle_search_repositories(
         return Err("limit must be between 1 and 60".to_string());
     }
 
-    let mut query_params = vec![];
+    let mut query_params: Vec<(String, String)> = vec![];
 
     if let Some(name) = &params.name {
         query_params.push(("name".to_string(), name.clone()));
@@ -103,10 +103,10 @@ pub async fn handle_search_repositories(
         query_params.push(("offset".to_string(), offset.to_string()));
     }
 
-    let url = server
+    let json = server
         .client
-        .build_url("/repositories/search", &query_params);
-    let json = server.client.get_json(&url).await?;
+        .get_json("/repositories/search", &query_params)
+        .await?;
     let response: SearchRepositoriesResponse =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 

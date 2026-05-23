@@ -71,11 +71,9 @@ pub async fn handle_get_security_report(
     } else {
         format!("/packages/{}", params.package_id)
     };
-    let mut path = path;
-    path.push_str("/security-report");
+    let path = format!("{}/security-report", path);
 
-    let url = server.client.build_url(&path, &[]);
-    let json = server.client.get_json(&url).await?;
+    let json = server.client.get_json(&path, &[]).await?;
     let report: SecurityReport =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 

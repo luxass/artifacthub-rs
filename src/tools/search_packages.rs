@@ -80,7 +80,7 @@ pub async fn handle_search_packages(
         return Err("limit must be between 1 and 60".to_string());
     }
 
-    let mut query_params = vec![];
+    let mut query_params: Vec<(String, String)> = vec![];
 
     if let Some(q) = &params.q {
         query_params.push(("q".to_string(), q.clone()));
@@ -102,8 +102,10 @@ pub async fn handle_search_packages(
         query_params.push(("offset".to_string(), offset.to_string()));
     }
 
-    let url = server.client.build_url("/packages/search", &query_params);
-    let json = server.client.get_json(&url).await?;
+    let json = server
+        .client
+        .get_json("/packages/search", &query_params)
+        .await?;
     let response: SearchResponse =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 

@@ -27,11 +27,9 @@ pub async fn handle_get_values_schema(
     } else {
         format!("/packages/{}", params.package_id)
     };
-    let mut path = path;
-    path.push_str("/values-schema");
+    let path = format!("{}/values-schema", path);
 
-    let url = server.client.build_url(&path, &[]);
-    let json = server.client.get_json(&url).await?;
+    let json = server.client.get_json(&path, &[]).await?;
     let schema: ValuesSchema =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 

@@ -20,22 +20,18 @@ pub fn package_url(kind: &str, repo: &str, name: &str, suffix: &str) -> String {
 }
 
 impl ArtifactHubClient {
-    pub fn build_url(&self, path: &str, params: &[(String, String)]) -> String {
+    fn full_url(&self, path: &str) -> String {
         let base = self.base_url.strip_suffix('/').unwrap_or(&self.base_url);
-        if params.is_empty() {
-            return format!("{}{}", base, path);
-        }
-        let encoded: Vec<String> = params
-            .iter()
-            .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(v)))
-            .collect();
-        format!("{}{}?{}", base, path, encoded.join("&"))
+        format!("{}{}", base, path)
     }
 
-    pub async fn get(&self, url: &str) -> Result<String, String> {
-        let resp = self
-            .client
-            .get(url)
+    pub async fn get(&self, path: &str, params: &[(String, String)]) -> Result<String, String> {
+        let mut req = self.client.get(self.full_url(path));
+        if !params.is_empty() {
+            req = req.query(params);
+        }
+
+        let resp = req
             .send()
             .await
             .map_err(|e| format!("Request failed: {}", e))?;
@@ -55,8 +51,12 @@ impl ArtifactHubClient {
         Ok(body)
     }
 
-    pub async fn get_json(&self, url: &str) -> Result<serde_json::Value, String> {
-        let body = self.get(url).await?;
+    pub async fn get_json(
+        &self,
+        path: &str,
+        params: &[(String, String)],
+    ) -> Result<serde_json::Value, String> {
+        let body = self.get(path, params).await?;
         serde_json::from_str(&body).map_err(|e| format!("Failed to parse response: {}", e))
     }
 
@@ -93,28 +93,19 @@ mod tests {
     }
 
     #[test]
-    fn test_build_url_no_trailing_slash() {
+    fn test_full_url_no_trailing_slash() {
         let client = client_with_base("https://example.com/api/v1");
-        let url = client.build_url("/packages/helm/repo/pkg", &[]);
-        assert_eq!(url, "https://example.com/api/v1/packages/helm/repo/pkg");
-    }
-
-    #[test]
-    fn test_build_url_trailing_slash_stripped() {
-        let client = client_with_base("https://example.com/api/v1/");
-        let url = client.build_url("/packages/helm/repo/pkg", &[]);
-        assert_eq!(url, "https://example.com/api/v1/packages/helm/repo/pkg");
-        assert!(!url.contains("//packages"));
-    }
-
-    #[test]
-    fn test_build_url_with_params() {
-        let client = client_with_base("https://example.com/api/v1/");
-        let url = client.build_url(
-            "/packages/search",
-            &[("q".to_string(), "nginx".to_string())],
+        assert_eq!(
+            client.full_url("/packages/helm/repo/pkg"),
+            "https://example.com/api/v1/packages/helm/repo/pkg"
         );
-        assert_eq!(url, "https://example.com/api/v1/packages/search?q=nginx");
+    }
+
+    #[test]
+    fn test_full_url_trailing_slash_stripped() {
+        let client = client_with_base("https://example.com/api/v1/");
+        let url = client.full_url("/packages/helm/repo/pkg");
+        assert_eq!(url, "https://example.com/api/v1/packages/helm/repo/pkg");
         assert!(!url.contains("//packages"));
     }
 }

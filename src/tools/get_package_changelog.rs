@@ -38,7 +38,7 @@ pub async fn handle_get_package_changelog(
     server: &ArtifactHubServer,
     params: GetChangelogParams,
 ) -> Result<Json<Changelog>, String> {
-    let mut query_params = vec![];
+    let mut query_params: Vec<(String, String)> = vec![];
     if let Some(ref to) = params.to {
         query_params.push(("to".to_string(), to.clone()));
     }
@@ -46,11 +46,8 @@ pub async fn handle_get_package_changelog(
         query_params.push(("from".to_string(), from.clone()));
     }
 
-    let url = server.client.build_url(
-        &package_url(&params.kind, &params.repo, &params.name, "/changelog"),
-        &query_params,
-    );
-    let json = server.client.get_json(&url).await?;
+    let path = package_url(&params.kind, &params.repo, &params.name, "/changelog");
+    let json = server.client.get_json(&path, &query_params).await?;
 
     let entries: Vec<ChangelogEntry> =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse changelog: {}", e))?;

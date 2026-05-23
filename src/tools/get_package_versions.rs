@@ -40,11 +40,8 @@ pub async fn handle_get_package_versions(
     server: &ArtifactHubServer,
     params: GetPackageVersionsParams,
 ) -> Result<Json<PackageVersions>, String> {
-    let url = server.client.build_url(
-        &package_url(&params.kind, &params.repo, &params.name, ""),
-        &[],
-    );
-    let json = server.client.get_json(&url).await?;
+    let path = package_url(&params.kind, &params.repo, &params.name, "");
+    let json = server.client.get_json(&path, &[]).await?;
 
     let mut versions: Vec<PackageVersion> =
         serde_json::from_value(json["available_versions"].clone())

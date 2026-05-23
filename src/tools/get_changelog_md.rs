@@ -29,7 +29,7 @@ pub async fn handle_get_changelog_md(
     server: &ArtifactHubServer,
     params: GetChangelogMdParams,
 ) -> Result<Json<ChangelogMarkdown>, String> {
-    let mut query_params = vec![];
+    let mut query_params: Vec<(String, String)> = vec![];
     if let Some(ref from) = params.from {
         query_params.push(("from".to_string(), from.clone()));
     }
@@ -37,11 +37,8 @@ pub async fn handle_get_changelog_md(
         query_params.push(("to".to_string(), to.clone()));
     }
 
-    let url = server.client.build_url(
-        &package_url(&params.kind, &params.repo, &params.name, "/changelog.md"),
-        &query_params,
-    );
-    let body = server.client.get(&url).await?;
+    let path = package_url(&params.kind, &params.repo, &params.name, "/changelog.md");
+    let body = server.client.get(&path, &query_params).await?;
 
     Ok(Json(ChangelogMarkdown { changelog: body }))
 }

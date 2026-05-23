@@ -30,16 +30,13 @@ pub async fn handle_get_package_values(
     server: &ArtifactHubServer,
     params: GetPackageValuesParams,
 ) -> Result<Json<PackageValues>, String> {
-    let mut query_params = vec![];
+    let mut query_params: Vec<(String, String)> = vec![];
     if let Some(ref version) = params.version {
         query_params.push(("version".to_string(), version.clone()));
     }
 
-    let pkg_url = server.client.build_url(
-        &package_url(&params.kind, &params.repo, &params.name, ""),
-        &query_params,
-    );
-    let json = server.client.get_json(&pkg_url).await?;
+    let path = package_url(&params.kind, &params.repo, &params.name, "");
+    let json = server.client.get_json(&path, &query_params).await?;
 
     let content_url = json["content_url"].as_str().ok_or(
         "No content_url found for this package. Values are only available for Helm charts.",
