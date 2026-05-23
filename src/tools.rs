@@ -57,7 +57,7 @@ fn tool_disabled_error<T>(name: &str) -> Result<Json<T>, String> {
     ))
 }
 
-#[tool_router]
+#[tool_router(router = tool_router, vis = "pub(crate)")]
 impl ArtifactHubServer {
     #[tool(description = "Get basic information about this MCP server")]
     async fn get_server_info(

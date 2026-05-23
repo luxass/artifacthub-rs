@@ -91,8 +91,8 @@ async fn main() -> anyhow::Result<()> {
         enabled_tools,
     };
 
-    // Build router (registers all tools via #[tool_router]), then disable unwanted ones
-    let mut router = Router::new(server);
+    // Router::new() creates an empty ToolRouter; merge in the generated one
+    let mut router = Router::new(server).with_tools(ArtifactHubServer::tool_router());
     for name in ALL_TOOL_NAMES {
         if !router.service.enabled_tools.contains(*name) {
             router.tool_router.disable_route(*name);
