@@ -13,6 +13,10 @@ check:
 test:
   cargo test --locked
 
+# Run e2e tests against real Artifact Hub API
+e2e:
+  cargo test --locked --features e2e --test e2e -- --include-ignored
+
 # Build
 build:
   cargo build --locked
