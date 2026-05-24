@@ -1,16 +1,16 @@
-mod get_changelog_md;
-mod get_package;
-mod get_package_changelog;
-mod get_package_readme;
-mod get_package_security_report;
-mod get_package_star_stats;
-mod get_package_templates;
-mod get_package_values;
-mod get_package_values_schema;
-mod get_package_versions;
-mod get_server_info;
-mod search_packages;
-mod search_repositories;
+pub mod get_changelog_md;
+pub mod get_package;
+pub mod get_package_changelog;
+pub mod get_package_readme;
+pub mod get_package_security_report;
+pub mod get_package_star_stats;
+pub mod get_package_templates;
+pub mod get_package_values;
+pub mod get_package_values_schema;
+pub mod get_package_versions;
+pub mod get_server_info;
+pub mod search_packages;
+pub mod search_repositories;
 
 use std::collections::HashSet;
 
@@ -19,6 +19,7 @@ use rmcp::{ServerHandler, handler::server::wrapper::Parameters, tool, tool_handl
 
 use crate::client::ArtifactHubClient;
 
+/// Names of all available MCP tools exposed by this server.
 pub const ALL_TOOL_NAMES: &[&str] = &[
     "get_server_info",
     "search_packages",
@@ -35,6 +36,7 @@ pub const ALL_TOOL_NAMES: &[&str] = &[
     "get_package_templates",
 ];
 
+/// The MCP server that holds the HTTP client and tracks which tools are enabled.
 #[derive(Clone)]
 pub struct ArtifactHubServer {
     pub client: ArtifactHubClient,
@@ -42,6 +44,7 @@ pub struct ArtifactHubServer {
 }
 
 impl ArtifactHubServer {
+    /// Checks if a tool is enabled by name.
     pub fn is_tool_enabled(&self, name: &str) -> bool {
         self.enabled_tools.contains(name)
     }
@@ -54,7 +57,7 @@ fn tool_disabled_error<T>(name: &str) -> Result<Json<T>, String> {
     ))
 }
 
-#[tool_router(router = tool_router, vis = "pub(crate)")]
+#[tool_router(router = tool_router, vis = "pub")]
 impl ArtifactHubServer {
     #[tool(description = "Get basic information about this MCP server")]
     async fn get_server_info(

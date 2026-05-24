@@ -34,7 +34,8 @@ pub struct SearchResult {
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct SearchRepositoryInfo {
     pub name: String,
-    pub display_name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
     pub url: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub organization_name: Option<String>,

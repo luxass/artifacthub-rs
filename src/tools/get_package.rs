@@ -57,8 +57,8 @@ pub struct RepositoryInfo {
     pub verified_publisher: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub official: bool,
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub cncf: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cncf: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scanner_disabled: Option<bool>,
 }

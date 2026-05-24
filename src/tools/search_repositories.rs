@@ -14,7 +14,8 @@ pub struct SearchRepositoriesResponse {
 pub struct SearchRepositoryResult {
     pub repository_id: String,
     pub name: String,
-    pub display_name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
     pub url: String,
     pub kind: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -25,8 +26,8 @@ pub struct SearchRepositoryResult {
     pub verified_publisher: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub official: bool,
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub cncf: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cncf: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scanner_disabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -107,10 +108,10 @@ pub async fn handle_search_repositories(
         .client
         .get_json("/repositories/search", &query_params)
         .await?;
-    let response: SearchRepositoriesResponse =
+    let repositories: Vec<SearchRepositoryResult> =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 
-    Ok(Json(response))
+    Ok(Json(SearchRepositoriesResponse { repositories }))
 }
 
 #[cfg(test)]
@@ -144,21 +145,19 @@ mod tests {
             .and(query_param("name", "bitnami"))
             .and(query_param("kind", "0"))
             .and(query_param("limit", "10"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "repositories": [
-                    {
-                        "repository_id": "repo-123",
-                        "name": "bitnami",
-                        "display_name": "Bitnami",
-                        "url": "https://charts.bitnami.com/bitnami",
-                        "kind": 0,
-                        "verified_publisher": true,
-                        "official": true,
-                        "cncf": false,
-                        "package_count": 500
-                    }
-                ]
-            })))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                {
+                    "repository_id": "repo-123",
+                    "name": "bitnami",
+                    "display_name": "Bitnami",
+                    "url": "https://charts.bitnami.com/bitnami",
+                    "kind": 0,
+                    "verified_publisher": true,
+                    "official": true,
+                    "cncf": false,
+                    "package_count": 500
+                }
+            ])))
             .mount(&mock_server)
             .await;
 

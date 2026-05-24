@@ -18,5 +18,8 @@ flate2 = "=1.1.9"
 tar = "=0.4.46"
 clap = { version = "=4.6.1", features = ["derive"] }
 
+[features]
+e2e = []
+
 [dev-dependencies]
 wiremock = "=0.6.5"

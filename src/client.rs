@@ -1,5 +1,6 @@
 const DEFAULT_API_BASE: &str = "https://artifacthub.io/api/v1";
 
+/// HTTP client for making requests to the Artifact Hub API.
 #[derive(Clone)]
 pub struct ArtifactHubClient {
     pub client: reqwest::Client,
@@ -15,6 +16,7 @@ impl Default for ArtifactHubClient {
     }
 }
 
+/// Builds an API path for a package given its kind, repository, and name.
 pub fn package_url(kind: &str, repo: &str, name: &str, suffix: &str) -> String {
     format!("/packages/{}/{}/{}{}", kind, repo, name, suffix)
 }
@@ -25,6 +27,7 @@ impl ArtifactHubClient {
         format!("{}{}", base, path)
     }
 
+    /// Sends a GET request and returns the response body as a string.
     pub async fn get(&self, path: &str, params: &[(String, String)]) -> Result<String, String> {
         let mut req = self.client.get(self.full_url(path));
         if !params.is_empty() {
@@ -51,6 +54,7 @@ impl ArtifactHubClient {
         Ok(body)
     }
 
+    /// Sends a GET request and parses the response as JSON.
     pub async fn get_json(
         &self,
         path: &str,
@@ -60,6 +64,7 @@ impl ArtifactHubClient {
         serde_json::from_str(&body).map_err(|e| format!("Failed to parse response: {}", e))
     }
 
+    /// Sends a GET request and returns the raw response bytes (for tarball downloads).
     pub async fn get_bytes(&self, url: &str) -> Result<Vec<u8>, String> {
         let resp = self
             .client
