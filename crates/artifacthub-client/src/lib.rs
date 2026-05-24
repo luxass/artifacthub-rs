@@ -8,3 +8,6 @@ pub mod client;
 
 /// Package kind mappings (Helm, Falco, OPA, etc.).
 pub mod kind;
+
+/// Response models for Artifact Hub API endpoints.
+pub mod models;

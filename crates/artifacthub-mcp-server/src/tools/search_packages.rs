@@ -1,3 +1,4 @@
+use artifacthub_client::models::SearchResponse;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -6,44 +7,6 @@ use crate::tools::ArtifactHubServer;
 use artifacthub_client::kind::{self as pkg_kind};
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct SearchResponse {
-    pub packages: Vec<SearchResult>,
-}
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct SearchResult {
-    pub package_id: String,
-    pub name: String,
-    pub normalized_name: String,
-    pub version: String,
-    pub description: String,
-    pub repository: SearchRepositoryInfo,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub logo_image_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub app_version: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub license: Option<String>,
-    pub deprecated: bool,
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub signed: bool,
-    pub stars: i32,
-    pub ts: i64,
-}
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct SearchRepositoryInfo {
-    pub name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub display_name: Option<String>,
-    pub url: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub organization_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub organization_display_name: Option<String>,
-}
-
-#[derive(Debug, serde::Deserialize, JsonSchema)]
 pub struct SearchParams {
     #[schemars(description = "Search query string")]
     pub q: Option<String>,
@@ -103,10 +66,7 @@ pub async fn handle_search_packages(
         query_params.push(("offset".to_string(), offset.to_string()));
     }
 
-    let json = server
-        .client
-        .get_json("/packages/search", &query_params)
-        .await?;
+    let json = server.client.get_json("/packages/search", &query_params).await?;
     let response: SearchResponse =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 
@@ -116,8 +76,8 @@ pub async fn handle_search_packages(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tools::ALL_TOOL_NAMES;
     use artifacthub_client::client::ArtifactHubClient;
+    use crate::tools::ALL_TOOL_NAMES;
     use std::collections::HashSet;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};

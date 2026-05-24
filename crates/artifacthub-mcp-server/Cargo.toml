@@ -8,7 +8,7 @@ repository = "https://github.com/luxass/artifacthub-mcp"
 readme = "../../README.md"
 
 [dependencies]
-artifacthub-client = { path = "../artifacthub-client" }
+artifacthub-client = { path = "../artifacthub-client", features = ["schemars"] }
 rmcp = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }

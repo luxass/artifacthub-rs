@@ -1,28 +1,10 @@
+use artifacthub_client::models::{PackageVersion, PackageVersions};
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use crate::tools::ArtifactHubServer;
 use artifacthub_client::client::package_url;
 use artifacthub_client::kind::KIND_DESCRIPTION;
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct PackageVersion {
-    pub version: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub app_version: Option<String>,
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub contains_security_updates: bool,
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub prerelease: bool,
-    pub ts: i64,
-}
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct PackageVersions {
-    pub versions: Vec<PackageVersion>,
-    pub count: usize,
-}
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
 pub struct GetPackageVersionsParams {
@@ -58,8 +40,8 @@ pub async fn handle_get_package_versions(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tools::ALL_TOOL_NAMES;
     use artifacthub_client::client::ArtifactHubClient;
+    use crate::tools::ALL_TOOL_NAMES;
     use std::collections::HashSet;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};

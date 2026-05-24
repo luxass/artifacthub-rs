@@ -1,14 +1,8 @@
+use artifacthub_client::models::ValuesSchema;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use crate::tools::ArtifactHubServer;
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct ValuesSchema {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub schema: Option<serde_json::Value>,
-}
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
 pub struct GetValuesSchemaParams {

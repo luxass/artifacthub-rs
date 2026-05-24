@@ -1,18 +1,11 @@
+use artifacthub_client::models::PackageValues;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use std::io::Read;
 
 use crate::tools::ArtifactHubServer;
 use artifacthub_client::client::package_url;
 use artifacthub_client::kind::KIND_DESCRIPTION;
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct PackageValues {
-    pub package: String,
-    pub version: String,
-    pub values: String,
-}
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
 pub struct GetPackageValuesParams {

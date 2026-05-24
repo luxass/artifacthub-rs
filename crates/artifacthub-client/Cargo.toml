@@ -10,3 +10,7 @@ repository = "https://github.com/luxass/artifacthub-mcp"
 serde = { workspace = true }
 serde_json = { workspace = true }
 reqwest = { workspace = true }
+schemars = { workspace = true, optional = true }
+
+[features]
+schemars = ["dep:schemars"]

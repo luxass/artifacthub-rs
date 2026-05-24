@@ -1,23 +1,8 @@
+use artifacthub_client::models::ChartTemplates;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use crate::tools::ArtifactHubServer;
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct ChartTemplates {
-    pub templates: Vec<ChartTemplate>,
-}
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct ChartTemplate {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub kind: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub api_version: Option<String>,
-}
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
 pub struct GetTemplatesParams {
