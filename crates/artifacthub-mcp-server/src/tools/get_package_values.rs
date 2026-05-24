@@ -3,9 +3,9 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 
-use crate::client::package_url;
-use crate::kind::KIND_DESCRIPTION;
 use crate::tools::ArtifactHubServer;
+use artifacthub_client::client::package_url;
+use artifacthub_client::kind::KIND_DESCRIPTION;
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct PackageValues {
@@ -81,8 +81,8 @@ pub async fn handle_get_package_values(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::client::ArtifactHubClient;
     use crate::tools::ALL_TOOL_NAMES;
+    use artifacthub_client::client::ArtifactHubClient;
     use flate2::Compression;
     use flate2::write::GzEncoder;
     use std::collections::HashSet;

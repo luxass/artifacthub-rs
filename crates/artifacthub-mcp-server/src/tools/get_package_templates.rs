@@ -48,8 +48,8 @@ pub async fn handle_get_templates(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::client::ArtifactHubClient;
     use crate::tools::ALL_TOOL_NAMES;
+    use artifacthub_client::client::ArtifactHubClient;
     use std::collections::HashSet;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};

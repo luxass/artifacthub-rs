@@ -2,8 +2,8 @@ use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::kind::{self as pkg_kind};
 use crate::tools::ArtifactHubServer;
+use artifacthub_client::kind::{self as pkg_kind};
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct SearchResponse {
@@ -116,8 +116,8 @@ pub async fn handle_search_packages(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::client::ArtifactHubClient;
     use crate::tools::ALL_TOOL_NAMES;
+    use artifacthub_client::client::ArtifactHubClient;
     use std::collections::HashSet;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};

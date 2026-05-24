@@ -2,9 +2,9 @@ use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::client::package_url;
-use crate::kind::KIND_DESCRIPTION;
 use crate::tools::ArtifactHubServer;
+use artifacthub_client::client::package_url;
+use artifacthub_client::kind::KIND_DESCRIPTION;
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct PackageReadme {
@@ -43,8 +43,8 @@ pub async fn handle_get_package_readme(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::client::ArtifactHubClient;
     use crate::tools::ALL_TOOL_NAMES;
+    use artifacthub_client::client::ArtifactHubClient;
     use std::collections::HashSet;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};

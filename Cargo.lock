@@ -77,9 +77,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "artifacthub-client"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "artifacthub-mcp"
 version = "0.2.1"
 dependencies = [
+ "artifacthub-client",
  "clap",
  "flate2",
  "reqwest",

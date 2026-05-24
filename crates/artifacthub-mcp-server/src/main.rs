@@ -1,12 +1,14 @@
+mod tools;
+
 use std::collections::HashSet;
 use std::time::Duration;
 
-use artifacthub_mcp::client::ArtifactHubClient;
-use artifacthub_mcp::tools::{ALL_TOOL_NAMES, ArtifactHubServer};
+use artifacthub_client::client::ArtifactHubClient;
 use clap::Parser;
 use rmcp::ServiceExt;
 use rmcp::handler::server::router::Router;
 use rmcp::transport::stdio;
+use tools::{ALL_TOOL_NAMES, ArtifactHubServer};
 
 const USER_AGENT: &str = concat!(
     "artifacthub-mcp/",

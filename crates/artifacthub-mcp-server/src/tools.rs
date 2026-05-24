@@ -17,7 +17,7 @@ use std::collections::HashSet;
 use rmcp::handler::server::wrapper::Json;
 use rmcp::{ServerHandler, handler::server::wrapper::Parameters, tool, tool_handler, tool_router};
 
-use crate::client::ArtifactHubClient;
+use artifacthub_client::client::ArtifactHubClient;
 
 /// Names of all available MCP tools exposed by this server.
 pub const ALL_TOOL_NAMES: &[&str] = &[

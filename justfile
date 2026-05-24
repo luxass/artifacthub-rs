@@ -57,12 +57,12 @@ release version:
     exit 1
   fi
 
-  current_version=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+  current_version=$(grep '^version = ' crates/artifacthub-mcp-server/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
   echo "Current version: $current_version"
   echo "New version: {{version}}"
 
   # Update version in Cargo.toml
-  sed -i '' "s/^version = \".*\"/version = \"{{version}}\"/" Cargo.toml
+  sed -i '' "s/^version = \".*\"/version = \"{{version}}\"/" crates/artifacthub-mcp-server/Cargo.toml
 
   # Let cargo update lockfile to match
   cargo check --quiet
