@@ -19,6 +19,7 @@ use rmcp::{ServerHandler, handler::server::wrapper::Parameters, tool, tool_handl
 
 use crate::client::ArtifactHubClient;
 
+/// Names of all available MCP tools exposed by this server.
 pub const ALL_TOOL_NAMES: &[&str] = &[
     "get_server_info",
     "search_packages",
@@ -35,6 +36,7 @@ pub const ALL_TOOL_NAMES: &[&str] = &[
     "get_package_templates",
 ];
 
+/// The MCP server that holds the HTTP client and tracks which tools are enabled.
 #[derive(Clone)]
 pub struct ArtifactHubServer {
     pub client: ArtifactHubClient,
@@ -42,6 +44,7 @@ pub struct ArtifactHubServer {
 }
 
 impl ArtifactHubServer {
+    /// Checks if a tool is enabled by name.
     pub fn is_tool_enabled(&self, name: &str) -> bool {
         self.enabled_tools.contains(name)
     }
