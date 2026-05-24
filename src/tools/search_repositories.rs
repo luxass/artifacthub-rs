@@ -104,7 +104,10 @@ pub async fn handle_search_repositories(
         query_params.push(("offset".to_string(), offset.to_string()));
     }
 
-    let json = server.client.get_json("/repositories/search", &query_params).await?;
+    let json = server
+        .client
+        .get_json("/repositories/search", &query_params)
+        .await?;
     let repositories: Vec<SearchRepositoryResult> =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 
