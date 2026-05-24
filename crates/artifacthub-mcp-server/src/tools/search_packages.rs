@@ -66,7 +66,10 @@ pub async fn handle_search_packages(
         query_params.push(("offset".to_string(), offset.to_string()));
     }
 
-    let json = server.client.get_json("/packages/search", &query_params).await?;
+    let json = server
+        .client
+        .get_json("/packages/search", &query_params)
+        .await?;
     let response: SearchResponse =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 
@@ -76,8 +79,8 @@ pub async fn handle_search_packages(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artifacthub_client::client::ArtifactHubClient;
     use crate::tools::ALL_TOOL_NAMES;
+    use artifacthub_client::client::ArtifactHubClient;
     use std::collections::HashSet;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};

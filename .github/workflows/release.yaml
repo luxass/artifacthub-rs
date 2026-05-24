@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "v*"
+      - "artifacthub-mcp-v*"
 
 permissions: {}
 
@@ -12,21 +12,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  guard:
-    name: Release guard
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    environment:
-      name: release-guard
-      deployment: false
-    steps:
-      - run: echo "Release guard passed"
-
   build:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
-    needs: guard
     permissions:
       contents: read
     strategy:
@@ -78,7 +66,7 @@ jobs:
           ARCHIVE: ${{ matrix.archive }}
         run: |
           set -euo pipefail
-          version="${GITHUB_REF_NAME#v}"
+          version="${GITHUB_REF_NAME#artifacthub-mcp-v}"
           name="artifacthub-mcp-${version}-${TARGET}"
           bin="target/${TARGET}/release/artifacthub-mcp"
 
@@ -130,39 +118,11 @@ jobs:
           path: dist/SHA256SUMS
           retention-days: 1
 
-  publish-crate:
-    name: Publish to crates.io
-    runs-on: ubuntu-latest
-    needs: guard
-    permissions:
-      contents: read
-      id-token: write
-    environment:
-      name: release
-      deployment: false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Setup Rust
-        run: rustup default stable
-
-      - uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe # v1.0.4
-        id: auth
-
-      - name: Publish
-        run: cargo publish -p artifacthub-mcp
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
-
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [checksums, publish-crate]
+    needs: checksums
     permissions:
-      # create and upload release assets
       contents: write
     environment:
       name: release

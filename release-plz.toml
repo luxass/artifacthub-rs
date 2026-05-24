@@ -1,0 +1,14 @@
+[workspace]
+allow_dirty = true
+git_release_enable = false
+pr_labels = ["release"]
+publish_timeout = "10m"
+repo_url = "https://github.com/luxass/artifacthub-mcp"
+
+[[package]]
+name = "artifacthub-client"
+semver_check = true
+
+[[package]]
+name = "artifacthub-mcp"
+semver_check = false

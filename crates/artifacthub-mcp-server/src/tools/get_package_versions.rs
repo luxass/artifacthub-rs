@@ -40,8 +40,8 @@ pub async fn handle_get_package_versions(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artifacthub_client::client::ArtifactHubClient;
     use crate::tools::ALL_TOOL_NAMES;
+    use artifacthub_client::client::ArtifactHubClient;
     use std::collections::HashSet;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};

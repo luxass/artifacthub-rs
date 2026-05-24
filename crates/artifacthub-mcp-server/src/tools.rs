@@ -19,8 +19,8 @@ use rmcp::{ServerHandler, handler::server::wrapper::Parameters, tool, tool_handl
 
 use artifacthub_client::client::ArtifactHubClient;
 use artifacthub_client::models::{
-    Changelog, ChangelogMarkdown, ChartTemplates, PackageReadme, PackageSummary, PackageVersions,
-    PackageValues, SearchRepositoriesResponse, SearchResponse, SecurityReport, StarStats,
+    Changelog, ChangelogMarkdown, ChartTemplates, PackageReadme, PackageSummary, PackageValues,
+    PackageVersions, SearchRepositoriesResponse, SearchResponse, SecurityReport, StarStats,
     ValuesSchema,
 };
 

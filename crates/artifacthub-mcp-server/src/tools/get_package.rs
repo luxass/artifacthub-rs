@@ -38,8 +38,8 @@ pub async fn handle_get_package(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artifacthub_client::client::ArtifactHubClient;
     use crate::tools::ALL_TOOL_NAMES;
+    use artifacthub_client::client::ArtifactHubClient;
     use std::collections::HashSet;
     use wiremock::matchers::{method, path, query_param};
     use wiremock::{Mock, MockServer, ResponseTemplate};
