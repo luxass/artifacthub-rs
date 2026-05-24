@@ -52,21 +52,21 @@ jobs:
           persist-credentials: false
 
       - name: Setup Rust
+        shell: bash
         env:
           TARGET: ${{ matrix.target }}
         run: |
           rustup default stable
-          rustup target add "$TARGET"
-
-      - name: Cache Cargo
-        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-        with:
-          lookup-only: true
+          if ! rustup target list --installed | grep -q "^${TARGET}$"; then
+            rustup target add "$TARGET"
+          fi
 
       - name: Test
+        shell: bash
         run: cargo test
 
       - name: Build release
+        shell: bash
         env:
           TARGET: ${{ matrix.target }}
         run: cargo build --release --target "$TARGET"
@@ -88,8 +88,7 @@ jobs:
             mkdir -p "${name}"
             cp LICENSE "${name}/"
             cp "${bin}" "${name}/"
-            cd "${name}"
-            zip -r "../dist/${name}.zip" .
+            powershell -Command "Compress-Archive -Path '${name}' -DestinationPath 'dist/${name}.zip'"
           else
             mkdir -p "${name}"
             cp LICENSE "${name}/"
@@ -149,11 +148,6 @@ jobs:
 
       - name: Setup Rust
         run: rustup default stable
-
-      - name: Cache Cargo
-        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-        with:
-          lookup-only: true
 
       - uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe # v1.0.4
         id: auth

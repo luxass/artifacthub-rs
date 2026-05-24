@@ -11,11 +11,18 @@ check:
 
 # Run tests
 test:
-  cargo test
+  cargo test --locked
+
+# Build
+build:
+  cargo build --locked
 
 # Format code
 fmt:
   cargo fmt
+
+fmt-check:
+  cargo fmt --check
 
 # Run clippy
 lint:
@@ -23,7 +30,7 @@ lint:
 
 # Run all CI checks
 ci:
-  cargo fmt --check
+  just fmt-check
   just lint
   just test
 
