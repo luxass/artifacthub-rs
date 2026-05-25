@@ -24,5 +24,10 @@ jobs:
       environment: homebrew-tap
       targets: '["aarch64-apple-darwin", "x86_64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu"]'
     secrets:
+      # These two secrets are from the "homebrew-tap" environment. But since you can't
+      # specify an environment for a reusable workflow, we need to pass them explicitly here.
+      #
+      # And then in the reusable workflow, we use the "environment" input to specify
+      # that the job should run in the "homebrew-tap" environment, which has access to these secrets.
       app-id: ${{ secrets.HOMEBREW_TAP_APP_ID }}
       app-private-key: ${{ secrets.HOMEBREW_TAP_APP_PRIVATE_KEY }}
