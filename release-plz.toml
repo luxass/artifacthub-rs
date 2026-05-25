@@ -4,6 +4,7 @@ git_release_enable = false
 pr_labels = ["release"]
 publish_timeout = "10m"
 repo_url = "https://github.com/luxass/artifacthub-mcp"
+release_always = false
 
 [[package]]
 name = "artifacthub-client"
