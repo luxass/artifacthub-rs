@@ -16,7 +16,7 @@ jobs:
       pull-requests: write
       id-token: write
     environment:
-      name: release
+      name: release-plz
       deployment: false
     steps:
       - name: checkout
