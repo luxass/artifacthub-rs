@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   update-formula:
+    if: ${{ startsWith(github.event.release.tag_name, 'artifacthub-mcp@') }}
     permissions:
       contents: write
       pull-requests: write
