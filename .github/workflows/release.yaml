@@ -21,8 +21,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  release-guard:
+    name: release guard
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment:
+      name: release-guard
+      deployment: false
+    steps:
+      - run: echo "release guard passed"
+
   build:
     name: build ${{ matrix.target }}
+    needs: release-guard
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -159,8 +171,8 @@ jobs:
         with:
           client-id: ${{ secrets.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-          owner: luxass
-          repositories: artifacthub-mcp
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
           permission-contents: write
 
       - name: upload assets and publish
