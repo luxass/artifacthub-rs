@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::client::{ClientInner, package_url};
+use crate::client::{ClientInner, encode_path_segment, package_url};
 use crate::models::{ChartTemplates, PackageValues, ValuesSchema};
 
 /// Helm chart specific endpoints (values, schema, templates).
@@ -29,8 +29,15 @@ impl Helm {
         let package_id = json["package_id"]
             .as_str()
             .ok_or("No package_id found for this package")?;
-        let version = json["version"].as_str().unwrap_or("unknown").to_string();
-        let values_path = format!("/packages/{}/{}/values", package_id, version);
+        let version = json["version"]
+            .as_str()
+            .ok_or("No version found for this package")?
+            .to_string();
+        let values_path = format!(
+            "/packages/{}/{}/values",
+            encode_path_segment(package_id),
+            encode_path_segment(&version)
+        );
         let values = self.inner.get(&values_path, &[]).await?;
 
         Ok(PackageValues {
@@ -54,8 +61,13 @@ impl Helm {
 
     /// List Kubernetes resources a chart creates.
     pub async fn templates(&self, params: &GetParams) -> Result<ChartTemplates, String> {
+        let mut query_params: Vec<(String, String)> = vec![];
+        if let Some(ref version) = params.version {
+            query_params.push(("version".to_string(), version.clone()));
+        }
+
         let path = package_url(&params.kind, &params.repo, &params.name, "/templates");
-        let json = self.inner.get_json(&path, &[]).await?;
+        let json = self.inner.get_json(&path, &query_params).await?;
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))
     }
 }

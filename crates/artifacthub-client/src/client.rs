@@ -177,7 +177,27 @@ impl ClientInner {
 
 /// Builds an API path for a package given its kind, repository, and name.
 pub fn package_url(kind: &str, repo: &str, name: &str, suffix: &str) -> String {
-    format!("/packages/{}/{}/{}{}", kind, repo, name, suffix)
+    format!(
+        "/packages/{}/{}/{}{}",
+        encode_path_segment(kind),
+        encode_path_segment(repo),
+        encode_path_segment(name),
+        suffix
+    )
+}
+
+pub(crate) fn encode_path_segment(segment: &str) -> String {
+    let mut encoded = String::new();
+
+    for byte in segment.bytes() {
+        if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'.' | b'_' | b'~') {
+            encoded.push(byte as char);
+        } else {
+            encoded.push_str(&format!("%{byte:02X}"));
+        }
+    }
+
+    encoded
 }
 
 #[cfg(test)]
@@ -220,6 +240,14 @@ mod tests {
         assert_eq!(
             client.inner.full_url("///packages/search"),
             "https://example.com/api/v1/packages/search"
+        );
+    }
+
+    #[test]
+    fn test_package_url_encodes_dynamic_segments() {
+        assert_eq!(
+            package_url("helm", "repo/name", "pkg?name", "/readme"),
+            "/packages/helm/repo%2Fname/pkg%3Fname/readme"
         );
     }
 }

@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use crate::client::{ClientInner, package_url};
-use crate::models::{Changelog, PackageReadme, PackageSummary, PackageVersions, SearchResponse};
+use crate::models::{
+    Changelog, PackageReadme, PackageSummary, PackageVersion, PackageVersions, SearchResponse,
+};
 
 /// Package search and lookup endpoints.
 ///
@@ -98,9 +100,17 @@ impl Packages {
 
     /// List all available versions for a package.
     pub async fn versions(&self, params: &GetParams) -> Result<PackageVersions, String> {
-        let path = package_url(&params.kind, &params.repo, &params.name, "/changelog");
+        let path = package_url(&params.kind, &params.repo, &params.name, "");
         let json = self.inner.get_json(&path, &[]).await?;
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))
+
+        let versions: Vec<PackageVersion> =
+            serde_json::from_value(json["available_versions"].clone())
+                .map_err(|e| format!("Failed to parse versions: {}", e))?;
+
+        Ok(PackageVersions {
+            count: versions.len(),
+            versions,
+        })
     }
 
     /// Get changelog between versions (JSON).
