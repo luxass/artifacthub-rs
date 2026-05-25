@@ -27,4 +27,4 @@ jobs:
       security-events: write
       # OIDC token for GitHub API authentication
       id-token: write
-    uses: luxass/shared-workflows/.github/workflows/reusable-ci-security.yaml@306df1ba2ab60f117e6e05c2f736e3f2bd4a0366 # v0.8.2
+    uses: luxass/shared-workflows/.github/workflows/reusable-ci-security.yaml@495f6427f288e78bddfca573876da1357549379d # v0.8.3
