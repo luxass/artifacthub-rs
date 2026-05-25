@@ -111,6 +111,7 @@ impl ArtifactHubClientBuilder {
 impl ClientInner {
     pub(crate) fn full_url(&self, path: &str) -> String {
         let base = self.base_url.strip_suffix('/').unwrap_or(&self.base_url);
+        let path = format!("/{}", path.trim_start_matches('/'));
         format!("{}{}", base, path)
     }
 
@@ -202,5 +203,23 @@ mod tests {
         let url = client.inner.full_url("/packages/helm/repo/pkg");
         assert_eq!(url, "https://example.com/api/v1/packages/helm/repo/pkg");
         assert!(!url.contains("//packages"));
+    }
+
+    #[test]
+    fn test_full_url_adds_missing_leading_slash() {
+        let client = client_with_base("https://example.com/api/v1");
+        assert_eq!(
+            client.inner.full_url("packages/search"),
+            "https://example.com/api/v1/packages/search"
+        );
+    }
+
+    #[test]
+    fn test_full_url_collapses_extra_leading_slashes() {
+        let client = client_with_base("https://example.com/api/v1/");
+        assert_eq!(
+            client.inner.full_url("///packages/search"),
+            "https://example.com/api/v1/packages/search"
+        );
     }
 }
