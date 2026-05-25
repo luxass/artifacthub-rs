@@ -8,7 +8,7 @@ resolver = "2"
 [workspace.package]
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/luxass/artifacthub-mcp"
+repository = "https://github.com/luxass/artifacthub-rs"
 
 [workspace.dependencies]
 artifacthub-client = { version = "=0.0.1", path = "crates/artifacthub-client" }

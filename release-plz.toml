@@ -4,7 +4,7 @@ git_release_enable = true
 git_release_draft = false
 pr_labels = ["release"]
 publish_timeout = "10m"
-repo_url = "https://github.com/luxass/artifacthub-mcp"
+repo_url = "https://github.com/luxass/artifacthub-rs"
 release_always = false
 
 [[package]]

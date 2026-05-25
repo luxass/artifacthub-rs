@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.2](https://github.com/luxass/artifacthub-mcp/compare/artifacthub-mcp@0.2.1...artifacthub-mcp@0.2.2) - 2026-05-25
+## [0.2.2](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.1...artifacthub-mcp@0.2.2) - 2026-05-25
 
 ### 🐛 Bug Fixes
 
@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🚜 Refactor
 
-- move response models to artifacthub-client crate ([#4](https://github.com/luxass/artifacthub-mcp/pull/4)) (by @luxass)
+- move response models to artifacthub-client crate ([#4](https://github.com/luxass/artifacthub-rs/pull/4)) (by @luxass)
 - use workspace dependency inheritance (by @luxass)
 - convert to workspace with separate client and server crates (by @luxass)
 

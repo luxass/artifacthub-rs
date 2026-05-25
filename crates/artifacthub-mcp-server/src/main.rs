@@ -13,7 +13,7 @@ use tools::{ALL_TOOL_NAMES, ArtifactHubServer};
 const USER_AGENT: &str = concat!(
     "artifacthub-mcp/",
     env!("CARGO_PKG_VERSION"),
-    " (+https://github.com/luxass/artifacthub-mcp)"
+    " (+https://github.com/luxass/artifacthub-rs)"
 );
 
 #[derive(Parser, Debug)]
