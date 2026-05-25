@@ -11,11 +11,12 @@ cargo add artifacthub-client
 ## Usage
 
 ```rust
-use artifacthub_client::{ArtifactHub, PackageGetParams, PackageSearchParams, RepoSearchParams};
+use artifacthub_client::ArtifactHubClient;
+use artifacthub_client::params::{PackageGetParams, PackageSearchParams, RepoSearchParams};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = ArtifactHub::new();
+    let client = ArtifactHubClient::new();
 
     // Search for packages
     let results = client.packages.search(&PackageSearchParams {
@@ -44,7 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Found {} repositories", repos.repositories.len());
 
     // Get Helm values.yaml
-    let values = client.helm.values(&artifacthub_client::HelmGetParams {
+    let values = client.helm.values(&artifacthub_client::params::HelmGetParams {
         kind: "helm".to_string(),
         repo: "bitnami".to_string(),
         name: "nginx".to_string(),
@@ -54,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Values:\n{}", values.values);
 
     // Get star history
-    let stats = client.stats.star_stats(&artifacthub_client::StatsGetParams {
+    let stats = client.stats.star_stats(&artifacthub_client::params::StatsGetParams {
         kind: "helm".to_string(),
         repo: "bitnami".to_string(),
         name: "nginx".to_string(),
@@ -63,7 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Star entries: {}", stats.stars.len());
 
     // Get security report
-    let report = client.security.report(&artifacthub_client::SecurityGetParams {
+    let report = client.security.report(&artifacthub_client::params::SecurityGetParams {
         kind: "helm".to_string(),
         repo: "bitnami".to_string(),
         name: "nginx".to_string(),

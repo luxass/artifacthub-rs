@@ -15,13 +15,7 @@ pub mod kind;
 /// Response models for Artifact Hub API endpoints.
 pub mod models;
 
+/// Request parameter types for endpoint methods.
+pub mod params;
+
 pub use client::{ArtifactHubClient, ArtifactHubClientBuilder};
-
-/// Short SDK-style alias for the Artifact Hub client.
-pub type ArtifactHub = ArtifactHubClient;
-
-// Re-export commonly used parameter types for convenience.
-pub use endpoints::{
-    ChangelogParams, HelmGetParams, PackageGetParams, PackageSearchParams, RepoSearchParams,
-    SecurityGetParams, StatsGetParams,
-};
