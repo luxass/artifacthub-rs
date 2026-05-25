@@ -89,10 +89,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
     let server = ArtifactHubServer {
-        client: ArtifactHubClient {
-            client,
-            ..Default::default()
-        },
+        client: ArtifactHubClient::builder().reqwest_client(client).build(),
         enabled_tools,
     };
 

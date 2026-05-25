@@ -80,10 +80,12 @@ dependencies = [
 name = "artifacthub-client"
 version = "0.0.1"
 dependencies = [
+ "flate2",
  "reqwest",
  "schemars",
  "serde",
  "serde_json",
+ "tar",
 ]
 
 [[package]]
