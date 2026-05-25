@@ -12,27 +12,28 @@ cargo add artifacthub-client
 
 ```rust
 use artifacthub_client::ArtifactHubClient;
-use artifacthub_client::params::{PackageGetParams, PackageSearchParams, RepoSearchParams};
+use artifacthub_client::params::RepoSearchParams;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = ArtifactHubClient::new();
 
     // Search for packages
-    let results = client.packages.search(&PackageSearchParams {
-        q: Some("nginx".to_string()),
-        ..Default::default()
-    }).await?;
+    let results = client
+        .packages
+        .search()
+        .query("nginx")
+        .send()
+        .await?;
 
     println!("Found {} packages", results.packages.len());
 
     // Get package details
-    let package = client.packages.get(&PackageGetParams {
-        kind: "helm".to_string(),
-        repo: "bitnami".to_string(),
-        name: "nginx".to_string(),
-        version: None,
-    }).await?;
+    let package = client
+        .packages
+        .get("helm", "bitnami", "nginx")
+        .send()
+        .await?;
 
     println!("Package: {}", package.name);
 

@@ -16,8 +16,16 @@ impl Packages {
         Self { inner }
     }
 
-    /// Search for packages by query, kind, repo, or org.
-    pub async fn search(&self, params: &SearchParams) -> Result<SearchResponse, String> {
+    /// Build a package search request.
+    pub fn search(&self) -> SearchRequest {
+        SearchRequest {
+            inner: self.inner.clone(),
+            params: SearchParams::default(),
+        }
+    }
+
+    /// Search for packages using a parameter struct.
+    pub async fn search_with(&self, params: &SearchParams) -> Result<SearchResponse, String> {
         let mut query_params: Vec<(String, String)> = vec![];
 
         if let Some(q) = &params.q {
@@ -46,8 +54,26 @@ impl Packages {
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))
     }
 
-    /// Get metadata summary for a package.
-    pub async fn get(&self, params: &GetParams) -> Result<PackageSummary, String> {
+    /// Build a package metadata request.
+    pub fn get(
+        &self,
+        kind: impl Into<String>,
+        repo: impl Into<String>,
+        name: impl Into<String>,
+    ) -> GetRequest {
+        GetRequest {
+            inner: self.inner.clone(),
+            params: GetParams {
+                kind: kind.into(),
+                repo: repo.into(),
+                name: name.into(),
+                version: None,
+            },
+        }
+    }
+
+    /// Get metadata summary for a package using a parameter struct.
+    pub async fn get_with(&self, params: &GetParams) -> Result<PackageSummary, String> {
         let mut query_params: Vec<(String, String)> = vec![];
         if let Some(ref version) = params.version {
             query_params.push(("version".to_string(), version.clone()));
@@ -90,6 +116,71 @@ impl Packages {
         let path = package_url(&params.kind, &params.repo, &params.name, "/changelog");
         let json = self.inner.get_json(&path, &query_params).await?;
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))
+    }
+}
+
+/// Fluent request builder for package search.
+pub struct SearchRequest {
+    inner: Arc<ClientInner>,
+    params: SearchParams,
+}
+
+impl SearchRequest {
+    pub fn query(mut self, query: impl Into<String>) -> Self {
+        self.params.q = Some(query.into());
+        self
+    }
+
+    pub fn q(self, query: impl Into<String>) -> Self {
+        self.query(query)
+    }
+
+    pub fn kind(mut self, kind: impl Into<String>) -> Self {
+        self.params.kind = Some(kind.into());
+        self
+    }
+
+    pub fn repo(mut self, repo: impl Into<String>) -> Self {
+        self.params.repo = Some(repo.into());
+        self
+    }
+
+    pub fn org(mut self, org: impl Into<String>) -> Self {
+        self.params.org = Some(org.into());
+        self
+    }
+
+    pub fn limit(mut self, limit: usize) -> Self {
+        self.params.limit = Some(limit);
+        self
+    }
+
+    pub fn offset(mut self, offset: usize) -> Self {
+        self.params.offset = Some(offset);
+        self
+    }
+
+    pub async fn send(self) -> Result<SearchResponse, String> {
+        Packages { inner: self.inner }
+            .search_with(&self.params)
+            .await
+    }
+}
+
+/// Fluent request builder for package metadata.
+pub struct GetRequest {
+    inner: Arc<ClientInner>,
+    params: GetParams,
+}
+
+impl GetRequest {
+    pub fn version(mut self, version: impl Into<String>) -> Self {
+        self.params.version = Some(version.into());
+        self
+    }
+
+    pub async fn send(self) -> Result<PackageSummary, String> {
+        Packages { inner: self.inner }.get_with(&self.params).await
     }
 }
 
