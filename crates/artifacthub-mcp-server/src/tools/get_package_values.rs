@@ -41,10 +41,7 @@ mod tests {
     use super::*;
     use crate::tools::ALL_TOOL_NAMES;
     use artifacthub_client::client::ArtifactHubClient;
-    use flate2::Compression;
-    use flate2::write::GzEncoder;
     use std::collections::HashSet;
-    use tar::Builder;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -58,41 +55,26 @@ mod tests {
         }
     }
 
-    fn create_test_tarball(values_content: &str) -> Vec<u8> {
-        let mut buf = Vec::new();
-        let encoder = GzEncoder::new(&mut buf, Compression::default());
-        let mut builder = Builder::new(encoder);
-
-        let mut header = tar::Header::new_gnu();
-        header.set_path("test-chart/values.yaml").unwrap();
-        header.set_size(values_content.len() as u64);
-        header.set_mode(0o644);
-        header.set_cksum();
-        builder.append(&header, values_content.as_bytes()).unwrap();
-
-        builder.finish().unwrap();
-        drop(builder);
-        buf
-    }
-
     #[tokio::test]
     async fn test_get_package_values_returns_values_yaml() {
         let mock_server = MockServer::start().await;
-        let tarball = create_test_tarball("replicaCount: 3\nimage:\n  repository: nginx\n");
 
         Mock::given(method("GET"))
             .and(path("/packages/helm/bitnami/nginx"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
                 "name": "nginx",
-                "version": "1.0.0",
-                "content_url": format!("{}/chart.tgz", mock_server.uri())
+                "version": "1.0.0"
             })))
             .mount(&mock_server)
             .await;
 
         Mock::given(method("GET"))
-            .and(path("/chart.tgz"))
-            .respond_with(ResponseTemplate::new(200).set_body_bytes(tarball))
+            .and(path("/packages/pkg-123/1.0.0/values"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_string("replicaCount: 3\nimage:\n  repository: nginx\n"),
+            )
             .mount(&mock_server)
             .await;
 
@@ -115,7 +97,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_package_values_no_content_url() {
+    async fn test_get_package_values_no_package_id() {
         let mock_server = MockServer::start().await;
 
         Mock::given(method("GET"))
@@ -143,6 +125,6 @@ mod tests {
         let Err(err) = result else {
             panic!("expected error")
         };
-        assert!(err.contains("No content_url"));
+        assert!(err.contains("No package_id"));
     }
 }

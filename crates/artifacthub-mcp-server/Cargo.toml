@@ -21,6 +21,4 @@ clap = { workspace = true }
 e2e = []
 
 [dev-dependencies]
-flate2 = { workspace = true }
-tar = { workspace = true }
 wiremock = { workspace = true }
