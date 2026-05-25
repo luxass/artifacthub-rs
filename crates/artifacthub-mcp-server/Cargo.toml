@@ -15,8 +15,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 reqwest = { workspace = true }
 schemars = { workspace = true }
-flate2 = { workspace = true }
-tar = { workspace = true }
 clap = { workspace = true }
 
 [features]

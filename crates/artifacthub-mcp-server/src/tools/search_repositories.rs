@@ -82,10 +82,7 @@ mod tests {
 
     fn test_server(base_url: &str) -> ArtifactHubServer {
         ArtifactHubServer {
-            client: ArtifactHubClient {
-                client: reqwest::Client::new(),
-                base_url: base_url.to_string(),
-            },
+            client: ArtifactHubClient::with_base_url(base_url),
             enabled_tools: ALL_TOOL_NAMES
                 .iter()
                 .map(|s| s.to_string())
