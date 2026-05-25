@@ -1,10 +1,9 @@
 use artifacthub_client::models::PackageValues;
+use artifacthub_client::params::HelmGetParams;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
-use std::io::Read;
 
 use crate::tools::ArtifactHubServer;
-use artifacthub_client::client::package_url;
 use artifacthub_client::kind::KIND_DESCRIPTION;
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
@@ -23,52 +22,18 @@ pub async fn handle_get_package_values(
     server: &ArtifactHubServer,
     params: GetPackageValuesParams,
 ) -> Result<Json<PackageValues>, String> {
-    let mut query_params: Vec<(String, String)> = vec![];
-    if let Some(ref version) = params.version {
-        query_params.push(("version".to_string(), version.clone()));
-    }
+    let values = server
+        .client
+        .helm
+        .values(&HelmGetParams {
+            kind: params.kind,
+            repo: params.repo,
+            name: params.name,
+            version: params.version,
+        })
+        .await?;
 
-    let path = package_url(&params.kind, &params.repo, &params.name, "");
-    let json = server.client.get_json(&path, &query_params).await?;
-
-    let content_url = json["content_url"].as_str().ok_or(
-        "No content_url found for this package. Values are only available for Helm charts.",
-    )?;
-
-    let version = json["version"].as_str().unwrap_or("unknown").to_string();
-
-    let tarball = server.client.get_bytes(content_url).await?;
-
-    let decoder = flate2::read::GzDecoder::new(&tarball[..]);
-    let mut archive = tar::Archive::new(decoder);
-
-    for entry in archive
-        .entries()
-        .map_err(|e| format!("Failed to read tarball: {}", e))?
-    {
-        let mut entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
-        let path = entry
-            .path()
-            .map_err(|e| format!("Failed to get entry path: {}", e))?;
-
-        if path.ends_with("values.yaml") && path.components().count() == 2 {
-            let mut contents = String::new();
-            entry
-                .read_to_string(&mut contents)
-                .map_err(|e| format!("Failed to read values.yaml: {}", e))?;
-
-            return Ok(Json(PackageValues {
-                package: params.name,
-                version,
-                values: contents,
-            }));
-        }
-    }
-
-    Err(format!(
-        "values.yaml not found in {}@{}",
-        params.name, version
-    ))
+    Ok(Json(values))
 }
 
 #[cfg(test)]
