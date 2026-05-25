@@ -45,7 +45,6 @@ jobs:
         uses: release-plz/action@v0.5.129
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
   build:
     name: Build ${{ matrix.target }}
