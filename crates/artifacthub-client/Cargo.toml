@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Rust client library for the Artifact Hub API"
+readme = "README.md"
 
 [dependencies]
 serde = { workspace = true }
