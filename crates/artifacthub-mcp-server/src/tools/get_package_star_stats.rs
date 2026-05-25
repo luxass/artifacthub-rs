@@ -1,27 +1,10 @@
+use artifacthub_client::models::{StarHistoryEntry, StarStats};
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use crate::tools::ArtifactHubServer;
 use artifacthub_client::client::package_url;
 use artifacthub_client::kind::KIND_DESCRIPTION;
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct StarStats {
-    pub stars: Vec<StarHistoryEntry>,
-}
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct StarHistoryEntry {
-    pub total: i32,
-    pub dates: Vec<StarDateEntry>,
-}
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct StarDateEntry {
-    pub date: String,
-    pub stars: i32,
-}
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
 pub struct GetStarStatsParams {

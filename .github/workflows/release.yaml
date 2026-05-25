@@ -1,32 +1,59 @@
 name: Release
 
+permissions: {}
+
 on:
   push:
+    branches:
+      - main
     tags:
-      - "v*"
-
-permissions: {}
+      - "artifacthub-mcp-v*"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  guard:
-    name: Release guard
+  release-plz:
+    name: Release-plz
+    if: ${{ github.repository_owner == 'luxass' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-    environment:
-      name: release-guard
-      deployment: false
+      contents: write
+      pull-requests: write
+      id-token: write
     steps:
-      - run: echo "Release guard passed"
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Rust
+        uses: oxc-project/setup-rust@23f38cfb0c04af97a055f76acee94d5be71c7c82 # v1.0.16
+        with:
+          cache-key: release
+
+      - name: Generate GitHub token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: generate-token
+        with:
+          owner: luxass
+          repositories: artifacthub-mcp
+          client-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Run release-plz
+        uses: release-plz/action@064f4d1e36c843611ddf013be726beaa4ad804db # v0.5.129
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
   build:
     name: Build ${{ matrix.target }}
+    if: ${{ startsWith(github.ref, 'refs/tags/artifacthub-mcp-v') }}
     runs-on: ${{ matrix.os }}
-    needs: guard
     permissions:
       contents: read
     strategy:
@@ -56,7 +83,7 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
         run: |
-          rustup default stable
+          rustup show
           if ! rustup target list --installed | grep -q "^${TARGET}$"; then
             rustup target add "$TARGET"
           fi
@@ -78,7 +105,7 @@ jobs:
           ARCHIVE: ${{ matrix.archive }}
         run: |
           set -euo pipefail
-          version="${GITHUB_REF_NAME#v}"
+          version="${GITHUB_REF_NAME#artifacthub-mcp-v}"
           name="artifacthub-mcp-${version}-${TARGET}"
           bin="target/${TARGET}/release/artifacthub-mcp"
 
@@ -105,6 +132,7 @@ jobs:
 
   checksums:
     name: Generate checksums
+    if: ${{ startsWith(github.ref, 'refs/tags/artifacthub-mcp-v') }}
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -130,43 +158,13 @@ jobs:
           path: dist/SHA256SUMS
           retention-days: 1
 
-  publish-crate:
-    name: Publish to crates.io
+  publish-release:
+    name: Publish GitHub Release
+    if: ${{ startsWith(github.ref, 'refs/tags/artifacthub-mcp-v') }}
     runs-on: ubuntu-latest
-    needs: guard
+    needs: checksums
     permissions:
-      contents: read
-      id-token: write
-    environment:
-      name: release
-      deployment: false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Setup Rust
-        run: rustup default stable
-
-      - uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe # v1.0.4
-        id: auth
-
-      - name: Publish
-        run: cargo publish -p artifacthub-mcp
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
-
-  create-release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    needs: [checksums, publish-crate]
-    permissions:
-      # create and upload release assets
       contents: write
-    environment:
-      name: release
-      deployment: false
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -190,19 +188,17 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          client-id: ${{ secrets.RELEASE_APP_ID }}
-          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          client-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
 
-      - name: Create release
+      - name: Upload assets and publish
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          tag="${GITHUB_REF_NAME}"
-          gh release create "$tag" dist/* \
-            --title "$tag" \
-            --generate-notes \
-            --verify-tag
+          gh release upload "$TAG" dist/*
+          gh release edit "$TAG" --draft=false

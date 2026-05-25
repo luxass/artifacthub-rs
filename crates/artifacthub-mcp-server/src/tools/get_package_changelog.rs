@@ -1,24 +1,10 @@
+use artifacthub_client::models::{Changelog, ChangelogEntry};
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use crate::tools::ArtifactHubServer;
 use artifacthub_client::client::package_url;
 use artifacthub_client::kind::KIND_DESCRIPTION;
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct ChangelogEntry {
-    pub version: String,
-    pub ts: i64,
-    pub changes: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub prerelease: Option<bool>,
-}
-
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
-pub struct Changelog {
-    pub entries: Vec<ChangelogEntry>,
-}
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
 pub struct GetChangelogParams {

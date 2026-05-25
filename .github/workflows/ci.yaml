@@ -36,17 +36,12 @@ jobs:
           persist-credentials: false
 
       - name: setup rust
-        run: rustup default stable
-
-      - name: cache rust
-        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        uses: oxc-project/setup-rust@23f38cfb0c04af97a055f76acee94d5be71c7c82 # v1.0.16
         with:
-          save-if: ${{ github.ref_name == 'main' }}
-
-      - name: install just
-        uses: taiki-e/install-action@f48d2f8ba2b452934c948b7be1a768079c3632ff # v2.79.6
-        with:
-          tool: just
+          components: clippy rustfmt
+          tools: just
+          cache-key: ci
+          save-cache: ${{ github.ref_name == 'main' }}
 
       - name: fmt
         run: just fmt-check

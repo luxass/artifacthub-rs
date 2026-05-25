@@ -18,6 +18,11 @@ use rmcp::handler::server::wrapper::Json;
 use rmcp::{ServerHandler, handler::server::wrapper::Parameters, tool, tool_handler, tool_router};
 
 use artifacthub_client::client::ArtifactHubClient;
+use artifacthub_client::models::{
+    Changelog, ChangelogMarkdown, ChartTemplates, PackageReadme, PackageSummary, PackageValues,
+    PackageVersions, SearchRepositoriesResponse, SearchResponse, SecurityReport, StarStats,
+    ValuesSchema,
+};
 
 /// Names of all available MCP tools exposed by this server.
 pub const ALL_TOOL_NAMES: &[&str] = &[
@@ -76,7 +81,7 @@ impl ArtifactHubServer {
     async fn search_packages(
         &self,
         Parameters(p): Parameters<search_packages::SearchParams>,
-    ) -> Result<Json<search_packages::SearchResponse>, String> {
+    ) -> Result<Json<SearchResponse>, String> {
         if !self.is_tool_enabled("search_packages") {
             return tool_disabled_error("search_packages");
         }
@@ -89,7 +94,7 @@ impl ArtifactHubServer {
     async fn get_package(
         &self,
         Parameters(p): Parameters<get_package::GetPackageParams>,
-    ) -> Result<Json<get_package::PackageSummary>, String> {
+    ) -> Result<Json<PackageSummary>, String> {
         if !self.is_tool_enabled("get_package") {
             return tool_disabled_error("get_package");
         }
@@ -102,7 +107,7 @@ impl ArtifactHubServer {
     async fn get_package_readme(
         &self,
         Parameters(p): Parameters<get_package_readme::GetPackageReadmeParams>,
-    ) -> Result<Json<get_package_readme::PackageReadme>, String> {
+    ) -> Result<Json<PackageReadme>, String> {
         if !self.is_tool_enabled("get_package_readme") {
             return tool_disabled_error("get_package_readme");
         }
@@ -113,7 +118,7 @@ impl ArtifactHubServer {
     async fn get_package_versions(
         &self,
         Parameters(p): Parameters<get_package_versions::GetPackageVersionsParams>,
-    ) -> Result<Json<get_package_versions::PackageVersions>, String> {
+    ) -> Result<Json<PackageVersions>, String> {
         if !self.is_tool_enabled("get_package_versions") {
             return tool_disabled_error("get_package_versions");
         }
@@ -124,7 +129,7 @@ impl ArtifactHubServer {
     async fn get_package_changelog(
         &self,
         Parameters(p): Parameters<get_package_changelog::GetChangelogParams>,
-    ) -> Result<Json<get_package_changelog::Changelog>, String> {
+    ) -> Result<Json<Changelog>, String> {
         if !self.is_tool_enabled("get_package_changelog") {
             return tool_disabled_error("get_package_changelog");
         }
@@ -135,7 +140,7 @@ impl ArtifactHubServer {
     async fn get_package_star_stats(
         &self,
         Parameters(p): Parameters<get_package_star_stats::GetStarStatsParams>,
-    ) -> Result<Json<get_package_star_stats::StarStats>, String> {
+    ) -> Result<Json<StarStats>, String> {
         if !self.is_tool_enabled("get_package_star_stats") {
             return tool_disabled_error("get_package_star_stats");
         }
@@ -146,7 +151,7 @@ impl ArtifactHubServer {
     async fn get_package_values(
         &self,
         Parameters(p): Parameters<get_package_values::GetPackageValuesParams>,
-    ) -> Result<Json<get_package_values::PackageValues>, String> {
+    ) -> Result<Json<PackageValues>, String> {
         if !self.is_tool_enabled("get_package_values") {
             return tool_disabled_error("get_package_values");
         }
@@ -157,7 +162,7 @@ impl ArtifactHubServer {
     async fn search_repositories(
         &self,
         Parameters(p): Parameters<search_repositories::SearchRepositoriesParams>,
-    ) -> Result<Json<search_repositories::SearchRepositoriesResponse>, String> {
+    ) -> Result<Json<SearchRepositoriesResponse>, String> {
         if !self.is_tool_enabled("search_repositories") {
             return tool_disabled_error("search_repositories");
         }
@@ -170,7 +175,7 @@ impl ArtifactHubServer {
     async fn get_changelog_md(
         &self,
         Parameters(p): Parameters<get_changelog_md::GetChangelogMdParams>,
-    ) -> Result<Json<get_changelog_md::ChangelogMarkdown>, String> {
+    ) -> Result<Json<ChangelogMarkdown>, String> {
         if !self.is_tool_enabled("get_changelog_md") {
             return tool_disabled_error("get_changelog_md");
         }
@@ -183,7 +188,7 @@ impl ArtifactHubServer {
     async fn get_package_security_report(
         &self,
         Parameters(p): Parameters<get_package_security_report::GetSecurityReportParams>,
-    ) -> Result<Json<get_package_security_report::SecurityReport>, String> {
+    ) -> Result<Json<SecurityReport>, String> {
         if !self.is_tool_enabled("get_package_security_report") {
             return tool_disabled_error("get_package_security_report");
         }
@@ -196,7 +201,7 @@ impl ArtifactHubServer {
     async fn get_package_values_schema(
         &self,
         Parameters(p): Parameters<get_package_values_schema::GetValuesSchemaParams>,
-    ) -> Result<Json<get_package_values_schema::ValuesSchema>, String> {
+    ) -> Result<Json<ValuesSchema>, String> {
         if !self.is_tool_enabled("get_package_values_schema") {
             return tool_disabled_error("get_package_values_schema");
         }
@@ -209,7 +214,7 @@ impl ArtifactHubServer {
     async fn get_package_templates(
         &self,
         Parameters(p): Parameters<get_package_templates::GetTemplatesParams>,
-    ) -> Result<Json<get_package_templates::ChartTemplates>, String> {
+    ) -> Result<Json<ChartTemplates>, String> {
         if !self.is_tool_enabled("get_package_templates") {
             return tool_disabled_error("get_package_templates");
         }

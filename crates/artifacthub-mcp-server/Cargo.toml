@@ -1,14 +1,14 @@
 [package]
 name = "artifacthub-mcp"
 version = "0.2.1"
-edition = "2024"
-license = "MIT"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
 description = "MCP server for Artifact Hub - search packages, get details, view changelogs, and extract Helm chart values"
-repository = "https://github.com/luxass/artifacthub-mcp"
 readme = "../../README.md"
 
 [dependencies]
-artifacthub-client = { path = "../artifacthub-client" }
+artifacthub-client = { path = "../artifacthub-client", features = ["schemars"] }
 rmcp = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
