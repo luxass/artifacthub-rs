@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.3...artifacthub-mcp@0.2.4) - 2026-05-25
+
+### 🚀 Features
+
+- *(artifacthub-client)* restructure client resources ([#9](https://github.com/luxass/artifacthub-rs/pull/9)) (by @luxass)
+
+### Contributors
+
+* @luxass
+
 ## [0.2.2](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.1...artifacthub-mcp@0.2.2) - 2026-05-25
 
 ### 🐛 Bug Fixes

@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "artifacthub-client"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "reqwest",
  "schemars",
@@ -82,7 +82,7 @@ dependencies = [
 
 [[package]]
 name = "artifacthub-mcp"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "artifacthub-client",
  "clap",
