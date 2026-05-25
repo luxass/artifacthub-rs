@@ -1,6 +1,7 @@
 [workspace]
 allow_dirty = true
-git_release_enable = false
+git_release_enable = true
+git_release_draft = false
 pr_labels = ["release"]
 publish_timeout = "10m"
 repo_url = "https://github.com/luxass/artifacthub-mcp"
@@ -9,7 +10,63 @@ release_always = false
 [[package]]
 name = "artifacthub-client"
 semver_check = true
+git_tag_enable = true
+git_tag_name = "artifacthub-client-v{{ version }}"
+git_release_name = "artifacthub-client-v{{ version }}"
 
 [[package]]
 name = "artifacthub-mcp"
 semver_check = false
+changelog_include = ["artifacthub-client"]
+git_tag_enable = true
+git_tag_name = "artifacthub-mcp-v{{ version }}"
+git_release_name = "artifacthub-mcp-v{{ version }}"
+git_release_draft = true
+
+[changelog]
+body = """
+
+## [{{ version }}]\
+    {%- if release_link -%}\
+        ({{ release_link }})\
+    {% endif %} \
+    - {{ timestamp | date(format="%Y-%m-%d") }}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+
+    {% for commit in commits %}
+        {%- if commit.scope -%}
+            - *({{commit.scope}})* {% if commit.breaking %}[**breaking**] {% endif %}\
+                {{ commit.message }}{{ self::username(commit=commit) }}\
+                {%- if commit.links %} \
+                    ({% for link in commit.links %}[{{link.text}}]({{link.href}}) {% endfor -%})\
+                {% endif %}
+        {% else -%}
+            - {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}{{ self::username(commit=commit) }}
+        {% endif -%}
+    {% endfor -%}
+{% endfor %}
+{%- if remote.contributors %}
+### Contributors
+{% for contributor in remote.contributors %}
+    * @{{ contributor.username }}
+{%- endfor %}
+{% endif -%}
+{%- macro username(commit) -%}
+    {% if commit.remote.username %} (by @{{ commit.remote.username }}){% endif -%}
+{% endmacro -%}
+"""
+
+commit_parsers = [
+  { message = "^feat", group = "🚀 Features" },
+  { message = "^fix", group = "🐛 Bug Fixes" },
+  { message = "^refactor", group = "🚜 Refactor" },
+  { message = "^doc", group = "📚 Documentation" },
+  { message = "^perf", group = "⚡ Performance" },
+  { message = "^style", group = "🎨 Styling" },
+  { message = "^test", group = "🧪 Testing" },
+  { message = "^chore|^ci|^deps", skip = true },
+  { body = ".*security", group = "🛡️ Security" },
+  { message = "^revert", group = "◀️ Revert" },
+  { message = ".*", group = "💼 Other" },
+]
