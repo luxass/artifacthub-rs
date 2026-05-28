@@ -71,6 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         kind: "helm".to_string(),
         repo: "bitnami".to_string(),
         name: "nginx".to_string(),
+        version: None,
     }).await?;
 
     if let Some(report) = report {

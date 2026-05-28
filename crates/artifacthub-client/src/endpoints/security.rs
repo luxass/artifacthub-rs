@@ -18,8 +18,13 @@ impl Security {
 
     /// Get detailed security report with CVEs for a package.
     pub async fn report(&self, params: &GetParams) -> Result<Option<SecurityReport>, String> {
+        let mut query_params: Vec<(String, String)> = vec![];
+        if let Some(ref version) = params.version {
+            query_params.push(("version".to_string(), version.clone()));
+        }
+
         let path = package_url(&params.kind, &params.repo, &params.name, "");
-        let json = self.inner.get_json(&path, &[]).await?;
+        let json = self.inner.get_json(&path, &query_params).await?;
         let package_id = json["package_id"]
             .as_str()
             .ok_or("No package_id found for this package")?;
@@ -39,6 +44,7 @@ pub struct GetParams {
     pub kind: String,
     pub repo: String,
     pub name: String,
+    pub version: Option<String>,
 }
 
 #[cfg(test)]
@@ -54,6 +60,7 @@ mod tests {
 
         Mock::given(method("GET"))
             .and(path("/packages/helm/bitnami/nginx"))
+            .and(wiremock::matchers::query_param("version", "1.2.3"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
                 "package_id": "pkg-123",
                 "version": "1.2.3"
@@ -82,6 +89,7 @@ mod tests {
                 kind: "helm".to_string(),
                 repo: "bitnami".to_string(),
                 name: "nginx".to_string(),
+                version: Some("1.2.3".to_string()),
             })
             .await
             .unwrap()
