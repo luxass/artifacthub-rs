@@ -8,20 +8,18 @@ use crate::tools::ArtifactHubServer;
 pub struct GetValuesSchemaParams {
     #[schemars(description = "Package ID (UUID, get this from get_package)")]
     pub package_id: String,
-    #[schemars(description = "Package version (defaults to latest)")]
-    pub version: Option<String>,
+    #[schemars(description = "Package version (from get_package; required by Artifact Hub API)")]
+    pub version: String,
 }
 
 pub async fn handle_get_values_schema(
     server: &ArtifactHubServer,
     params: GetValuesSchemaParams,
 ) -> Result<Json<ValuesSchema>, String> {
-    let path = if let Some(ref version) = params.version {
-        format!("/packages/{}/{}", params.package_id, version)
-    } else {
-        format!("/packages/{}", params.package_id)
-    };
-    let path = format!("{}/values-schema", path);
+    let path = format!(
+        "/packages/{}/{}/values-schema",
+        params.package_id, params.version
+    );
 
     let json = server.client.get_json(&path, &[]).await?;
     let schema: ValuesSchema =
@@ -81,7 +79,7 @@ mod tests {
             &server,
             GetValuesSchemaParams {
                 package_id: "pkg-123".to_string(),
-                version: Some("1.0.0".to_string()),
+                version: "1.0.0".to_string(),
             },
         )
         .await
@@ -90,31 +88,5 @@ mod tests {
         assert!(result.0.schema.is_some());
         let schema = result.0.schema.unwrap();
         assert_eq!(schema["type"].as_str(), Some("object"));
-    }
-
-    #[tokio::test]
-    async fn test_get_values_schema_no_version() {
-        let mock_server = MockServer::start().await;
-
-        Mock::given(method("GET"))
-            .and(path("/packages/pkg-123/values-schema"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "schema": { "type": "object" }
-            })))
-            .mount(&mock_server)
-            .await;
-
-        let server = test_server(&mock_server.uri());
-        let result = handle_get_values_schema(
-            &server,
-            GetValuesSchemaParams {
-                package_id: "pkg-123".to_string(),
-                version: None,
-            },
-        )
-        .await
-        .unwrap();
-
-        assert!(result.0.schema.is_some());
     }
 }
