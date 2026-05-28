@@ -1,3 +1,4 @@
+use artifacthub_client::endpoints::PackageSearchParams;
 use artifacthub_client::models::SearchResponse;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
@@ -44,34 +45,19 @@ pub async fn handle_search_packages(
         return Err("limit must be between 1 and 60".to_string());
     }
 
-    let mut query_params: Vec<(String, String)> = vec![];
-
-    if let Some(q) = &params.q {
-        query_params.push(("ts_query_web".to_string(), q.clone()));
-    }
-    if let Some(kind) = &params.kind {
-        let id = resolve_kind(kind)?;
-        query_params.push(("kind".to_string(), id));
-    }
-    if let Some(repo) = &params.repo {
-        query_params.push(("repo".to_string(), repo.clone()));
-    }
-    if let Some(org) = &params.org {
-        query_params.push(("org".to_string(), org.clone()));
-    }
-    if let Some(limit) = params.limit {
-        query_params.push(("limit".to_string(), limit.to_string()));
-    }
-    if let Some(offset) = params.offset {
-        query_params.push(("offset".to_string(), offset.to_string()));
-    }
-
-    let json = server
+    let kind = params.kind.as_deref().map(resolve_kind).transpose()?;
+    let response = server
         .client
-        .get_json("/packages/search", &query_params)
+        .packages
+        .search_with(&PackageSearchParams {
+            q: params.q,
+            kind,
+            repo: params.repo,
+            org: params.org,
+            limit: params.limit,
+            offset: params.offset,
+        })
         .await?;
-    let response: SearchResponse =
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 
     Ok(Json(response))
 }

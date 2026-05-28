@@ -13,7 +13,8 @@ cargo add artifacthub-client
 ```rust
 use artifacthub_client::ArtifactHubClient;
 use artifacthub_client::params::{
-    HelmGetParams, RepoSearchParams, SecurityGetParams, StatsGetParams,
+    HelmGetParams, PackageGetParams, PackageSearchParams, RepoSearchParams, SecurityGetParams,
+    StatsGetParams,
 };
 
 #[tokio::main]
@@ -21,21 +22,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = ArtifactHubClient::new();
 
     // Search for packages
-    let results = client
-        .packages
-        .search()
-        .query("nginx")
-        .send()
-        .await?;
+    let results = client.packages.search_with(&PackageSearchParams {
+        q: Some("nginx".to_string()),
+        ..Default::default()
+    }).await?;
 
     println!("Found {} packages", results.packages.len());
 
     // Get package details
-    let package = client
-        .packages
-        .get("helm", "bitnami", "nginx")
-        .send()
-        .await?;
+    let package = client.packages.get_with(&PackageGetParams {
+        kind: "helm".to_string(),
+        repo: "bitnami".to_string(),
+        name: "nginx".to_string(),
+        version: None,
+    }).await?;
 
     println!("Package: {}", package.name);
 
@@ -73,7 +73,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         name: "nginx".to_string(),
     }).await?;
 
-    println!("Security report: {:?}", report.summary);
+    if let Some(report) = report {
+        println!("Security report: {:?}", report.summary);
+    }
 
     Ok(())
 }

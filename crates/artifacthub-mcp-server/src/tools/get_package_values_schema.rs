@@ -1,6 +1,8 @@
-use artifacthub_client::models::ValuesSchema;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
+use serde::Serialize;
+
+use artifacthub_client::models::ValuesSchemaDocument;
 
 use crate::tools::ArtifactHubServer;
 
@@ -12,20 +14,22 @@ pub struct GetValuesSchemaParams {
     pub version: String,
 }
 
+#[derive(Debug, Serialize, JsonSchema)]
+pub struct ValuesSchemaOutput {
+    pub schema: Option<ValuesSchemaDocument>,
+}
+
 pub async fn handle_get_values_schema(
     server: &ArtifactHubServer,
     params: GetValuesSchemaParams,
-) -> Result<Json<ValuesSchema>, String> {
-    let path = format!(
-        "/packages/{}/{}/values-schema",
-        params.package_id, params.version
-    );
+) -> Result<Json<ValuesSchemaOutput>, String> {
+    let schema = server
+        .client
+        .packages
+        .values_schema(&params.package_id, &params.version)
+        .await?;
 
-    let json = server.client.get_json(&path, &[]).await?;
-    let schema: ValuesSchema =
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
-
-    Ok(Json(schema))
+    Ok(Json(ValuesSchemaOutput { schema }))
 }
 
 #[cfg(test)]
@@ -54,19 +58,17 @@ mod tests {
         Mock::given(method("GET"))
             .and(path("/packages/pkg-123/1.0.0/values-schema"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "replicaCount": {
-                            "type": "integer",
-                            "default": 1
-                        },
-                        "image": {
-                            "type": "object",
-                            "properties": {
-                                "repository": { "type": "string" },
-                                "tag": { "type": "string" }
-                            }
+                "type": "object",
+                "properties": {
+                    "replicaCount": {
+                        "type": "integer",
+                        "default": 1
+                    },
+                    "image": {
+                        "type": "object",
+                        "properties": {
+                            "repository": { "type": "string" },
+                            "tag": { "type": "string" }
                         }
                     }
                 }
@@ -86,7 +88,31 @@ mod tests {
         .unwrap();
 
         assert!(result.0.schema.is_some());
-        let schema = result.0.schema.unwrap();
+        let schema = serde_json::to_value(result.0.schema.unwrap()).unwrap();
         assert_eq!(schema["type"].as_str(), Some("object"));
+    }
+
+    #[tokio::test]
+    async fn test_get_values_schema_empty_body_returns_none() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/pkg-123/1.0.0/values-schema"))
+            .respond_with(ResponseTemplate::new(200).set_body_string(""))
+            .mount(&mock_server)
+            .await;
+
+        let server = test_server(&mock_server.uri());
+        let result = handle_get_values_schema(
+            &server,
+            GetValuesSchemaParams {
+                package_id: "pkg-123".to_string(),
+                version: "1.0.0".to_string(),
+            },
+        )
+        .await
+        .unwrap();
+
+        assert!(result.0.schema.is_none());
     }
 }

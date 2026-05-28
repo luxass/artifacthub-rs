@@ -1,9 +1,9 @@
-use artifacthub_client::models::{PackageVersion, PackageVersions};
+use artifacthub_client::endpoints::PackageGetParams;
+use artifacthub_client::models::PackageVersions;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 
 use crate::tools::ArtifactHubServer;
-use artifacthub_client::client::package_url;
 use artifacthub_client::kind::KIND_DESCRIPTION;
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
@@ -22,19 +22,22 @@ pub async fn handle_get_package_versions(
     server: &ArtifactHubServer,
     params: GetPackageVersionsParams,
 ) -> Result<Json<PackageVersions>, String> {
-    let path = package_url(&params.kind, &params.repo, &params.name, "");
-    let json = server.client.get_json(&path, &[]).await?;
+    let mut package_versions = server
+        .client
+        .packages
+        .versions(&PackageGetParams {
+            kind: params.kind,
+            repo: params.repo,
+            name: params.name,
+            version: None,
+        })
+        .await?;
 
-    let mut versions: Vec<PackageVersion> =
-        serde_json::from_value(json["available_versions"].clone())
-            .map_err(|e| format!("Failed to parse versions: {}", e))?;
-
-    let count = versions.len();
     if let Some(limit) = params.limit {
-        versions.truncate(limit);
+        package_versions.versions.truncate(limit);
     }
 
-    Ok(Json(PackageVersions { versions, count }))
+    Ok(Json(package_versions))
 }
 
 #[cfg(test)]

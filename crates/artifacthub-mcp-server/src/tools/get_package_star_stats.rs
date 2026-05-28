@@ -1,9 +1,9 @@
-use artifacthub_client::models::{StarHistoryEntry, StarStats};
+use artifacthub_client::endpoints::StatsGetParams;
+use artifacthub_client::models::StarStats;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 
 use crate::tools::ArtifactHubServer;
-use artifacthub_client::client::package_url;
 use artifacthub_client::kind::KIND_DESCRIPTION;
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
@@ -20,13 +20,17 @@ pub async fn handle_get_package_star_stats(
     server: &ArtifactHubServer,
     params: GetStarStatsParams,
 ) -> Result<Json<StarStats>, String> {
-    let path = package_url(&params.kind, &params.repo, &params.name, "/stars");
-    let json = server.client.get_json(&path, &[]).await?;
+    let stats = server
+        .client
+        .stats
+        .star_stats(&StatsGetParams {
+            kind: params.kind,
+            repo: params.repo,
+            name: params.name,
+        })
+        .await?;
 
-    let stars: Vec<StarHistoryEntry> =
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse star stats: {}", e))?;
-
-    Ok(Json(StarStats { stars }))
+    Ok(Json(stats))
 }
 
 #[cfg(test)]

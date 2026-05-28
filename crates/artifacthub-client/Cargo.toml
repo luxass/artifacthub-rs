@@ -16,3 +16,7 @@ schemars = { workspace = true, optional = true }
 
 [features]
 schemars = ["dep:schemars"]
+
+[dev-dependencies]
+wiremock = { workspace = true }
+tokio = { workspace = true }

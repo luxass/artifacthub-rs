@@ -1,4 +1,5 @@
-use artifacthub_client::models::{SearchRepositoriesResponse, SearchRepositoryResult};
+use artifacthub_client::endpoints::RepoSearchParams;
+use artifacthub_client::models::SearchRepositoriesResponse;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 
@@ -31,44 +32,34 @@ pub async fn handle_search_repositories(
         return Err("limit must be between 1 and 60".to_string());
     }
 
-    let mut query_params: Vec<(String, String)> = vec![];
-
-    if let Some(name) = &params.name {
-        query_params.push(("name".to_string(), name.clone()));
-    }
-    if let Some(kind) = &params.kind {
-        let id = if let Some(id) = pkg_kind::to_id(kind) {
-            id.to_string()
+    let kind = if let Some(kind) = &params.kind {
+        if let Some(id) = pkg_kind::to_id(kind) {
+            Some(id.to_string())
         } else {
             return Err(format!(
                 "Unknown kind: '{}'. Valid kinds: {}",
                 kind,
                 pkg_kind::valid_kinds().join(", ")
             ));
-        };
-        query_params.push(("kind".to_string(), id));
-    }
-    if let Some(user) = &params.user {
-        query_params.push(("user".to_string(), user.clone()));
-    }
-    if let Some(org) = &params.org {
-        query_params.push(("org".to_string(), org.clone()));
-    }
-    if let Some(limit) = params.limit {
-        query_params.push(("limit".to_string(), limit.to_string()));
-    }
-    if let Some(offset) = params.offset {
-        query_params.push(("offset".to_string(), offset.to_string()));
-    }
+        }
+    } else {
+        None
+    };
 
-    let json = server
+    let repositories = server
         .client
-        .get_json("/repositories/search", &query_params)
+        .repositories
+        .search(&RepoSearchParams {
+            name: params.name,
+            kind,
+            user: params.user,
+            org: params.org,
+            limit: params.limit,
+            offset: params.offset,
+        })
         .await?;
-    let repositories: Vec<SearchRepositoryResult> =
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 
-    Ok(Json(SearchRepositoriesResponse { repositories }))
+    Ok(Json(repositories))
 }
 
 #[cfg(test)]

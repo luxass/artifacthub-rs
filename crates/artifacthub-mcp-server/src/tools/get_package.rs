@@ -3,7 +3,7 @@ use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 
 use crate::tools::ArtifactHubServer;
-use artifacthub_client::client::package_url;
+use artifacthub_client::endpoints::PackageGetParams;
 use artifacthub_client::kind::KIND_DESCRIPTION;
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
@@ -22,15 +22,16 @@ pub async fn handle_get_package(
     server: &ArtifactHubServer,
     params: GetPackageParams,
 ) -> Result<Json<PackageSummary>, String> {
-    let mut query_params: Vec<(String, String)> = vec![];
-    if let Some(ref version) = params.version {
-        query_params.push(("version".to_string(), version.clone()));
-    }
-
-    let path = package_url(&params.kind, &params.repo, &params.name, "");
-    let json = server.client.get_json(&path, &query_params).await?;
-    let summary: PackageSummary =
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
+    let summary = server
+        .client
+        .packages
+        .get_with(&PackageGetParams {
+            kind: params.kind,
+            repo: params.repo,
+            name: params.name,
+            version: params.version,
+        })
+        .await?;
 
     Ok(Json(summary))
 }

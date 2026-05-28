@@ -17,10 +17,19 @@ impl Security {
     }
 
     /// Get detailed security report with CVEs for a package.
-    pub async fn report(&self, params: &GetParams) -> Result<SecurityReport, String> {
-        let path = package_url(&params.kind, &params.repo, &params.name, "/security-report");
+    pub async fn report(&self, params: &GetParams) -> Result<Option<SecurityReport>, String> {
+        let path = package_url(&params.kind, &params.repo, &params.name, "");
         let json = self.inner.get_json(&path, &[]).await?;
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))
+        let package_id = json["package_id"]
+            .as_str()
+            .ok_or("No package_id found for this package")?;
+        let version = json["version"]
+            .as_str()
+            .ok_or("No version found for this package")?;
+
+        crate::endpoints::Packages::new(self.inner.clone())
+            .security_report(package_id, version)
+            .await
     }
 }
 
@@ -30,4 +39,54 @@ pub struct GetParams {
     pub kind: String,
     pub repo: String,
     pub name: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ArtifactHubClient;
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    #[tokio::test]
+    async fn report_resolves_package_before_package_id_endpoint() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/helm/bitnami/nginx"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
+                "version": "1.2.3"
+            })))
+            .mount(&mock_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/pkg-123/1.2.3/security-report"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "summary": {
+                    "critical": 0,
+                    "high": 1,
+                    "medium": 0,
+                    "low": 0,
+                    "unknown": 0
+                }
+            })))
+            .mount(&mock_server)
+            .await;
+
+        let client = ArtifactHubClient::with_base_url(mock_server.uri());
+        let report = client
+            .security
+            .report(&GetParams {
+                kind: "helm".to_string(),
+                repo: "bitnami".to_string(),
+                name: "nginx".to_string(),
+            })
+            .await
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(report.summary.unwrap().high, Some(1));
+    }
 }

@@ -22,7 +22,7 @@ use rmcp::{ServerHandler, handler::server::wrapper::Parameters, tool, tool_handl
 use artifacthub_client::client::ArtifactHubClient;
 use artifacthub_client::models::{
     Changelog, ChangelogMarkdown, PackageReadme, PackageSummary, PackageValues, PackageVersions,
-    SearchRepositoriesResponse, SearchResponse, SecurityReport, StarStats, ValuesSchema,
+    SearchRepositoriesResponse, SearchResponse, SecurityReport, StarStats,
 };
 
 /// Names of all available MCP tools exposed by this server.
@@ -204,7 +204,7 @@ impl ArtifactHubServer {
     async fn get_package_values_schema(
         &self,
         Parameters(p): Parameters<get_package_values_schema::GetValuesSchemaParams>,
-    ) -> Result<Json<ValuesSchema>, String> {
+    ) -> Result<Json<get_package_values_schema::ValuesSchemaOutput>, String> {
         if !self.is_tool_enabled("get_package_values_schema") {
             return tool_disabled_error("get_package_values_schema");
         }
