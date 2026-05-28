@@ -93,6 +93,21 @@ impl Packages {
 
     /// Get changelog between versions (JSON).
     pub async fn changelog(&self, params: &ChangelogParams) -> Result<Changelog, String> {
+        let package_path = package_url(&params.kind, &params.repo, &params.name, "");
+        let package = self.inner.get_json(&package_path, &[]).await?;
+        let package_id = package["package_id"]
+            .as_str()
+            .ok_or("No package_id found for this package")?;
+
+        self.changelog_by_package_id(package_id, params).await
+    }
+
+    /// Get changelog between versions using the official package ID endpoint.
+    pub async fn changelog_by_package_id(
+        &self,
+        package_id: &str,
+        params: &ChangelogParams,
+    ) -> Result<Changelog, String> {
         let mut query_params: Vec<(String, String)> = vec![];
         if let Some(ref from) = params.from {
             query_params.push(("from".to_string(), from.clone()));
@@ -101,7 +116,7 @@ impl Packages {
             query_params.push(("to".to_string(), to.clone()));
         }
 
-        let path = package_url(&params.kind, &params.repo, &params.name, "/changelog");
+        let path = package_id_url(package_id, "/changelog");
         let json = self.inner.get_json(&path, &query_params).await?;
         let entries: Vec<ChangelogEntry> =
             serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
@@ -357,7 +372,16 @@ mod tests {
         let mock_server = MockServer::start().await;
 
         Mock::given(method("GET"))
-            .and(path("/packages/helm/bitnami/nginx/changelog"))
+            .and(path("/packages/helm/bitnami/nginx"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
+                "version": "1.2.3"
+            })))
+            .mount(&mock_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/pkg-123/changelog"))
             .and(query_param("from", "1.0.0"))
             .and(query_param("to", "1.2.3"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
