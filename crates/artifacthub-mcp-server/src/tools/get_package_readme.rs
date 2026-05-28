@@ -108,9 +108,11 @@ mod tests {
                 version: None,
             },
         )
-        .await
-        .unwrap();
+        .await;
 
-        assert_eq!(result.0.readme, "");
+        assert!(matches!(
+            result,
+            Err(ref error) if error == "No readme found for this package"
+        ));
     }
 }

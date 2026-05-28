@@ -63,7 +63,16 @@ mod tests {
         let mock_server = MockServer::start().await;
 
         Mock::given(method("GET"))
-            .and(path("/packages/helm/bitnami/nginx/changelog"))
+            .and(path("/packages/helm/bitnami/nginx"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
+                "version": "1.3.0"
+            })))
+            .mount(&mock_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/pkg-123/changelog"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
                 {
                     "version": "1.3.0",
