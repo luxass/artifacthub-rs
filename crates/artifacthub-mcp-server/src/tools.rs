@@ -4,6 +4,8 @@ pub mod get_package_changelog;
 pub mod get_package_readme;
 pub mod get_package_security_report;
 pub mod get_package_star_stats;
+pub mod get_package_template;
+pub mod get_package_template_data;
 pub mod get_package_templates;
 pub mod get_package_values;
 pub mod get_package_values_schema;
@@ -19,9 +21,8 @@ use rmcp::{ServerHandler, handler::server::wrapper::Parameters, tool, tool_handl
 
 use artifacthub_client::client::ArtifactHubClient;
 use artifacthub_client::models::{
-    Changelog, ChangelogMarkdown, ChartTemplates, PackageReadme, PackageSummary, PackageValues,
-    PackageVersions, SearchRepositoriesResponse, SearchResponse, SecurityReport, StarStats,
-    ValuesSchema,
+    Changelog, ChangelogMarkdown, PackageReadme, PackageSummary, PackageValues, PackageVersions,
+    SearchRepositoriesResponse, SearchResponse, SecurityReport, StarStats, ValuesSchema,
 };
 
 /// Names of all available MCP tools exposed by this server.
@@ -39,6 +40,8 @@ pub const ALL_TOOL_NAMES: &[&str] = &[
     "get_package_security_report",
     "get_package_values_schema",
     "get_package_templates",
+    "get_package_template",
+    "get_package_template_data",
 ];
 
 /// The MCP server that holds the HTTP client and tracks which tools are enabled.
@@ -183,7 +186,7 @@ impl ArtifactHubServer {
     }
 
     #[tool(
-        description = "Get detailed security report with CVEs for a package. Requires package_id (UUID) from get_package."
+        description = "Get detailed security report with CVEs for a package. Requires package_id and version from get_package."
     )]
     async fn get_package_security_report(
         &self,
@@ -196,7 +199,7 @@ impl ArtifactHubServer {
     }
 
     #[tool(
-        description = "Get JSON schema for a Helm chart's values.yaml. Requires package_id (UUID) from get_package."
+        description = "Get JSON schema for a Helm chart's values.yaml. Requires package_id and version from get_package."
     )]
     async fn get_package_values_schema(
         &self,
@@ -209,16 +212,45 @@ impl ArtifactHubServer {
     }
 
     #[tool(
-        description = "Get list of Kubernetes resources (templates) a Helm chart creates. Requires package_id (UUID) from get_package."
+        description = "List Helm chart template names and metadata without template source. Use get_package_template to fetch one decoded template. Requires package_id and version from get_package."
     )]
     async fn get_package_templates(
         &self,
         Parameters(p): Parameters<get_package_templates::GetTemplatesParams>,
-    ) -> Result<Json<ChartTemplates>, String> {
+    ) -> Result<Json<get_package_templates::TemplateList>, String> {
         if !self.is_tool_enabled("get_package_templates") {
             return tool_disabled_error("get_package_templates");
         }
         get_package_templates::handle_get_templates(self, p).await
+    }
+
+    #[tool(
+        description = "Get one decoded Helm chart template by exact name. Use get_package_templates first to list template names. Requires package_id and version from get_package."
+    )]
+    async fn get_package_template(
+        &self,
+        Parameters(p): Parameters<get_package_template::GetTemplateParams>,
+    ) -> Result<Json<get_package_template::Template>, String> {
+        if !self.is_tool_enabled("get_package_template") {
+            return tool_disabled_error("get_package_template");
+        }
+        get_package_template::handle_get_template(self, p).await
+    }
+
+    #[tool(
+        description = "Get only the decoded Helm chart template source text by exact name. Use get_package_templates first to list template names. Requires package_id and version from get_package."
+    )]
+    async fn get_package_template_data(
+        &self,
+        Parameters(p): Parameters<get_package_template_data::GetTemplateDataParams>,
+    ) -> Result<String, String> {
+        if !self.is_tool_enabled("get_package_template_data") {
+            return Err(
+                "Tool 'get_package_template_data' is disabled. Start the server with --tools to enable it."
+                    .to_string(),
+            );
+        }
+        get_package_template_data::handle_get_template_data(self, p).await
     }
 }
 

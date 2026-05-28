@@ -162,14 +162,16 @@ For manual installation, add to your User Settings (JSON):
 | Tool | Description |
 |------|-------------|
 | `get_package_values` | Extract `values.yaml` from a Helm chart |
-| `get_package_values_schema` | Get JSON schema for Helm chart values |
-| `get_package_templates` | List Kubernetes resources a chart creates |
+| `get_package_values_schema` | Get JSON schema for Helm chart values using `package_id` and `version` from `get_package` |
+| `get_package_templates` | List chart template names and metadata using `package_id` and `version` from `get_package` |
+| `get_package_template` | Get one decoded chart template by exact name after listing templates |
+| `get_package_template_data` | Get only decoded chart template source text by exact name |
 
 ### Security
 
 | Tool | Description |
 |------|-------------|
-| `get_package_security_report` | Get detailed security report with CVEs |
+| `get_package_security_report` | Get detailed security report with CVEs using `package_id` and `version` from `get_package` |
 
 ## Examples
 

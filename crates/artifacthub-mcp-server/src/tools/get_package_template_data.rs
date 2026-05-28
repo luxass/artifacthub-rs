@@ -1,32 +1,24 @@
 use artifacthub_client::models::ChartTemplates;
-use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
-use serde::Serialize;
 
 use crate::tools::ArtifactHubServer;
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
-pub struct GetTemplatesParams {
+pub struct GetTemplateDataParams {
     #[schemars(description = "Package ID (UUID, get this from get_package)")]
     pub package_id: String,
     #[schemars(description = "Package version (from get_package; required by Artifact Hub API)")]
     pub version: String,
-}
-
-#[derive(Debug, Serialize, JsonSchema)]
-pub struct TemplateList {
-    pub templates: Vec<TemplateListItem>,
-}
-
-#[derive(Debug, Serialize, JsonSchema)]
-pub struct TemplateListItem {
+    #[schemars(
+        description = "Exact template file name from get_package_templates, for example templates/deployment.yaml"
+    )]
     pub name: String,
 }
 
-pub async fn handle_get_templates(
+pub async fn handle_get_template_data(
     server: &ArtifactHubServer,
-    params: GetTemplatesParams,
-) -> Result<Json<TemplateList>, String> {
+    params: GetTemplateDataParams,
+) -> Result<String, String> {
     let path = format!(
         "/packages/{}/{}/templates",
         params.package_id, params.version
@@ -36,13 +28,15 @@ pub async fn handle_get_templates(
     let templates: ChartTemplates =
         serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
 
-    let templates = templates
+    let template = templates
         .templates
         .into_iter()
-        .filter_map(|template| template.name.map(|name| TemplateListItem { name }))
-        .collect();
+        .find(|template| template.name.as_deref() == Some(params.name.as_str()))
+        .ok_or_else(|| format!("Template '{}' not found", params.name))?;
 
-    Ok(Json(TemplateList { templates }))
+    template
+        .data
+        .ok_or_else(|| format!("Template '{}' has no data", params.name))
 }
 
 #[cfg(test)]
@@ -65,7 +59,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_templates_returns_templates() {
+    async fn test_get_template_data_returns_decoded_data() {
         let mock_server = MockServer::start().await;
 
         Mock::given(method("GET"))
@@ -73,11 +67,12 @@ mod tests {
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
                 "templates": [
                     {
-                        "name": "deployment",
+                        "name": "templates/deployment.yaml",
                         "data": "YXBpVmVyc2lvbjogYXBwcy92MQpraW5kOiBEZXBsb3ltZW50Cg=="
                     },
                     {
-                        "name": "service"
+                        "name": "templates/service.yaml",
+                        "data": "YXBpVmVyc2lvbjogdjEKa2luZDogU2VydmljZQo="
                     }
                 ]
             })))
@@ -85,18 +80,49 @@ mod tests {
             .await;
 
         let server = test_server(&mock_server.uri());
-        let result = handle_get_templates(
+        let result = handle_get_template_data(
             &server,
-            GetTemplatesParams {
+            GetTemplateDataParams {
                 package_id: "pkg-123".to_string(),
                 version: "1.0.0".to_string(),
+                name: "templates/service.yaml".to_string(),
             },
         )
         .await
         .unwrap();
 
-        assert_eq!(result.0.templates.len(), 2);
-        assert_eq!(result.0.templates[0].name, "deployment");
-        assert_eq!(result.0.templates[1].name, "service");
+        assert_eq!(result, "apiVersion: v1\nkind: Service\n");
+    }
+
+    #[tokio::test]
+    async fn test_get_template_data_returns_error_when_missing() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/pkg-123/1.0.0/templates"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "templates": [
+                    {
+                        "name": "templates/service.yaml",
+                        "data": "YXBpVmVyc2lvbjogdjEKa2luZDogU2VydmljZQo="
+                    }
+                ]
+            })))
+            .mount(&mock_server)
+            .await;
+
+        let server = test_server(&mock_server.uri());
+        let err = handle_get_template_data(
+            &server,
+            GetTemplateDataParams {
+                package_id: "pkg-123".to_string(),
+                version: "1.0.0".to_string(),
+                name: "templates/deployment.yaml".to_string(),
+            },
+        )
+        .await
+        .unwrap_err();
+
+        assert_eq!(err, "Template 'templates/deployment.yaml' not found");
     }
 }

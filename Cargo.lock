@@ -74,6 +74,7 @@ dependencies = [
 name = "artifacthub-client"
 version = "0.0.2"
 dependencies = [
+ "base64",
  "reqwest",
  "schemars",
  "serde",
