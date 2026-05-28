@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crate::client::{ClientInner, package_url};
-use crate::models::{StarHistoryEntry, StarStats};
+use crate::client::ClientInner;
+use crate::models::StarStats;
 
 /// Package statistics endpoints (star history).
 ///
@@ -18,12 +18,14 @@ impl Stats {
 
     /// Get star history for a package.
     pub async fn star_stats(&self, params: &GetParams) -> Result<StarStats, String> {
-        let path = package_url(&params.kind, &params.repo, &params.name, "/stars");
-        let json = self.inner.get_json(&path, &[]).await?;
-        let stars: Vec<StarHistoryEntry> =
-            serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
-
-        Ok(StarStats { stars })
+        crate::endpoints::Packages::new(self.inner.clone())
+            .star_stats(&crate::endpoints::PackageGetParams {
+                kind: params.kind.clone(),
+                repo: params.repo.clone(),
+                name: params.name.clone(),
+                version: None,
+            })
+            .await
     }
 }
 
@@ -43,11 +45,20 @@ mod tests {
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[tokio::test]
-    async fn star_stats_uses_stars_endpoint_and_wraps_history() {
+    async fn star_stats_resolves_package_before_package_id_endpoint() {
         let mock_server = MockServer::start().await;
 
         Mock::given(method("GET"))
-            .and(path("/packages/helm/bitnami/nginx/stars"))
+            .and(path("/packages/helm/bitnami/nginx"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
+                "version": "1.2.3"
+            })))
+            .mount(&mock_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/pkg-123/stars"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
                 {
                     "total": 150,

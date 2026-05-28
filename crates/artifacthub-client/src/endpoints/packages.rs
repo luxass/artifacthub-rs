@@ -130,7 +130,18 @@ impl Packages {
 
     /// Get package star history using the package kind, repository, and name.
     pub async fn star_stats(&self, params: &GetParams) -> Result<StarStats, String> {
-        let path = package_url(&params.kind, &params.repo, &params.name, "/stars");
+        let path = package_url(&params.kind, &params.repo, &params.name, "");
+        let json = self.inner.get_json(&path, &[]).await?;
+        let package_id = json["package_id"]
+            .as_str()
+            .ok_or("No package_id found for this package")?;
+
+        self.star_stats_by_package_id(package_id).await
+    }
+
+    /// Get package star history using the official package ID endpoint.
+    pub async fn star_stats_by_package_id(&self, package_id: &str) -> Result<StarStats, String> {
+        let path = package_id_url(package_id, "/stars");
         let json = self.inner.get_json(&path, &[]).await?;
 
         let stars: Vec<StarHistoryEntry> = serde_json::from_value(json)
@@ -205,6 +216,10 @@ fn package_version_url(package_id: &str, version: &str, suffix: &str) -> String 
     )
 }
 
+fn package_id_url(package_id: &str, suffix: &str) -> String {
+    format!("/packages/{}{}", encode_path_segment(package_id), suffix)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -217,6 +232,14 @@ mod tests {
         assert_eq!(
             package_version_url("pkg/id", "1.0.0+build", "/templates"),
             "/packages/pkg%2Fid/1.0.0%2Bbuild/templates"
+        );
+    }
+
+    #[test]
+    fn package_id_url_encodes_dynamic_segment() {
+        assert_eq!(
+            package_id_url("pkg/id", "/stars"),
+            "/packages/pkg%2Fid/stars"
         );
     }
 
@@ -407,6 +430,49 @@ mod tests {
         let values = client.packages.values("pkg-123", "1.0.0").await.unwrap();
 
         assert_eq!(values, "replicaCount: 2\n");
+    }
+
+    #[tokio::test]
+    async fn star_stats_resolves_package_before_package_id_endpoint() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/helm/bitnami/nginx"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
+                "version": "1.2.3"
+            })))
+            .mount(&mock_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/pkg-123/stars"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                {
+                    "total": 150,
+                    "dates": [
+                        { "date": "2024-01-01", "stars": 100 },
+                        { "date": "2024-02-01", "stars": 150 }
+                    ]
+                }
+            ])))
+            .mount(&mock_server)
+            .await;
+
+        let client = ArtifactHubClient::with_base_url(mock_server.uri());
+        let stats = client
+            .packages
+            .star_stats(&GetParams {
+                kind: "helm".to_string(),
+                repo: "bitnami".to_string(),
+                name: "nginx".to_string(),
+                version: None,
+            })
+            .await
+            .unwrap();
+
+        assert_eq!(stats.stars.len(), 1);
+        assert_eq!(stats.stars[0].total, 150);
     }
 
     #[tokio::test]
