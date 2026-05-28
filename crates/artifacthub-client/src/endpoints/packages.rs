@@ -71,8 +71,11 @@ impl Packages {
 
         let path = package_url(&params.kind, &params.repo, &params.name, "");
         let json = self.inner.get_json(&path, &query_params).await?;
+        let readme = json["readme"]
+            .as_str()
+            .ok_or("No readme found for this package")?;
         Ok(PackageReadme {
-            readme: json["readme"].as_str().unwrap_or("").to_string(),
+            readme: readme.to_string(),
         })
     }
 
@@ -365,6 +368,34 @@ mod tests {
             .unwrap();
 
         assert_eq!(readme.readme, "# Nginx");
+    }
+
+    #[tokio::test]
+    async fn readme_errors_when_response_has_no_readme() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/helm/bitnami/nginx"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
+                "name": "nginx"
+            })))
+            .mount(&mock_server)
+            .await;
+
+        let client = ArtifactHubClient::with_base_url(mock_server.uri());
+        let error = client
+            .packages
+            .readme(&GetParams {
+                kind: "helm".to_string(),
+                repo: "bitnami".to_string(),
+                name: "nginx".to_string(),
+                version: None,
+            })
+            .await
+            .unwrap_err();
+
+        assert_eq!(error, "No readme found for this package");
     }
 
     #[tokio::test]
