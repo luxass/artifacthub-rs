@@ -17,11 +17,16 @@ pub struct PackageSummary {
     pub prerelease: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub signed: bool,
+    #[serde(default)]
     pub keywords: Vec<String>,
     pub ts: i64,
     pub repository: RepositoryInfo,
     pub stats: PackageStats,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "schemars",
+        schemars(schema_with = "crate::models::json_value_schema")
+    )]
     pub data: Option<serde_json::Value>,
     pub links: Vec<Link>,
     #[serde(skip_serializing_if = "Option::is_none")]

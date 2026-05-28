@@ -12,6 +12,10 @@ pub struct PackageValues {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct ValuesSchema {
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "schemars",
+        schemars(schema_with = "crate::models::json_value_schema")
+    )]
     pub schema: Option<serde_json::Value>,
 }
 

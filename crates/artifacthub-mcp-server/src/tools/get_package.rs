@@ -138,4 +138,32 @@ mod tests {
 
         assert_eq!(result.0.name, "nginx");
     }
+
+    #[tokio::test]
+    async fn test_get_package_defaults_missing_keywords() {
+        let mock_server = MockServer::start().await;
+        let mut body = sample_package_json();
+        body.as_object_mut().unwrap().remove("keywords");
+
+        Mock::given(method("GET"))
+            .and(path("/packages/helm/kvalitetsit/templates"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(body))
+            .mount(&mock_server)
+            .await;
+
+        let server = test_server(&mock_server.uri());
+        let result = handle_get_package(
+            &server,
+            GetPackageParams {
+                kind: "helm".to_string(),
+                repo: "kvalitetsit".to_string(),
+                name: "templates".to_string(),
+                version: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        assert!(result.0.keywords.is_empty());
+    }
 }

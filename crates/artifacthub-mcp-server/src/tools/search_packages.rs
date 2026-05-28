@@ -47,7 +47,7 @@ pub async fn handle_search_packages(
     let mut query_params: Vec<(String, String)> = vec![];
 
     if let Some(q) = &params.q {
-        query_params.push(("q".to_string(), q.clone()));
+        query_params.push(("ts_query_web".to_string(), q.clone()));
     }
     if let Some(kind) = &params.kind {
         let id = resolve_kind(kind)?;
@@ -82,7 +82,7 @@ mod tests {
     use crate::tools::ALL_TOOL_NAMES;
     use artifacthub_client::client::ArtifactHubClient;
     use std::collections::HashSet;
-    use wiremock::matchers::{method, path};
+    use wiremock::matchers::{method, path, query_param};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     fn test_server(base_url: &str) -> ArtifactHubServer {
@@ -101,6 +101,9 @@ mod tests {
 
         Mock::given(method("GET"))
             .and(path("/packages/search"))
+            .and(query_param("ts_query_web", "test"))
+            .and(query_param("kind", "0"))
+            .and(query_param("limit", "10"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
                 "packages": [
                     {

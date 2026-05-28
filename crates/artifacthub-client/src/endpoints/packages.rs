@@ -31,7 +31,7 @@ impl Packages {
         let mut query_params: Vec<(String, String)> = vec![];
 
         if let Some(q) = &params.q {
-            query_params.push(("q".to_string(), q.clone()));
+            query_params.push(("ts_query_web".to_string(), q.clone()));
         }
         if let Some(kind) = &params.kind {
             query_params.push(("kind".to_string(), kind.clone()));
