@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.4...artifacthub-mcp@0.2.5) - 2026-05-28
+
+### 🐛 Bug Fixes
+
+- require versions for package id endpoints (by @luxass)
+- align Artifact Hub search and metadata parsing (by @luxass)
+
+### 🚀 Features
+
+- add focused Helm template tools (by @luxass)
+
+### Contributors
+
+* @luxass
+
 ## [0.2.4](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.3...artifacthub-mcp@0.2.4) - 2026-05-25
 
 ### 🚀 Features
