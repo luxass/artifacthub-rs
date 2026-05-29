@@ -29,7 +29,7 @@ pub async fn handle_get_template(
 ) -> Result<Json<Template>, String> {
     let templates = server
         .client
-        .packages
+        .packages()
         .templates(&params.package_id, &params.version)
         .await?;
 

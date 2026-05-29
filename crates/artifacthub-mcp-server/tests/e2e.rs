@@ -1,15 +1,43 @@
 #![cfg(feature = "e2e")]
 
 use std::io::{BufRead, BufReader, Read, Write};
+use std::ops::{Deref, DerefMut};
 use std::process::{Child, Command, Stdio};
 
-fn spawn_server() -> Child {
-    Command::new(env!("CARGO_BIN_EXE_artifacthub-mcp"))
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("failed to spawn artifacthub-mcp binary")
+struct TestServer {
+    child: Child,
+}
+
+impl Deref for TestServer {
+    type Target = Child;
+
+    fn deref(&self) -> &Self::Target {
+        &self.child
+    }
+}
+
+impl DerefMut for TestServer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.child
+    }
+}
+
+impl Drop for TestServer {
+    fn drop(&mut self) {
+        let _ = self.child.kill();
+        let _ = self.child.wait();
+    }
+}
+
+fn spawn_server() -> TestServer {
+    TestServer {
+        child: Command::new(env!("CARGO_BIN_EXE_artifacthub-mcp"))
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("failed to spawn artifacthub-mcp binary"),
+    }
 }
 
 fn send_request(stdin: &mut impl Write, id: u64, method: &str, params: serde_json::Value) {

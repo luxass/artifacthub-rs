@@ -3,7 +3,6 @@ use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 
 use crate::tools::ArtifactHubServer;
-use artifacthub_client::endpoints::PackageGetParams;
 use artifacthub_client::kind::KIND_DESCRIPTION;
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
@@ -22,16 +21,16 @@ pub async fn handle_get_package_readme(
     server: &ArtifactHubServer,
     params: GetPackageReadmeParams,
 ) -> Result<Json<PackageReadme>, String> {
-    let readme = server
+    let mut readme_request = server
         .client
-        .packages
-        .readme(&PackageGetParams {
-            kind: params.kind,
-            repo: params.repo,
-            name: params.name,
-            version: params.version,
-        })
-        .await?;
+        .packages()
+        .readme(params.kind, params.repo, params.name);
+
+    if let Some(version) = params.version {
+        readme_request = readme_request.version(version);
+    }
+
+    let readme = readme_request.send().await?;
 
     Ok(Json(readme))
 }

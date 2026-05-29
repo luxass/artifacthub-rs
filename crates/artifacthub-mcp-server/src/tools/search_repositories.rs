@@ -1,4 +1,3 @@
-use artifacthub_client::endpoints::RepoSearchParams;
 use artifacthub_client::models::SearchRepositoriesResponse;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
@@ -46,18 +45,28 @@ pub async fn handle_search_repositories(
         None
     };
 
-    let repositories = server
-        .client
-        .repositories
-        .search(&RepoSearchParams {
-            name: params.name,
-            kind,
-            user: params.user,
-            org: params.org,
-            limit: params.limit,
-            offset: params.offset,
-        })
-        .await?;
+    let mut search = server.client.repositories().search();
+
+    if let Some(name) = params.name {
+        search = search.name(name);
+    }
+    if let Some(kind) = kind {
+        search = search.kind(kind);
+    }
+    if let Some(user) = params.user {
+        search = search.user(user);
+    }
+    if let Some(org) = params.org {
+        search = search.org(org);
+    }
+    if let Some(limit) = params.limit {
+        search = search.limit(limit);
+    }
+    if let Some(offset) = params.offset {
+        search = search.offset(offset);
+    }
+
+    let repositories = search.send().await?;
 
     Ok(Json(repositories))
 }

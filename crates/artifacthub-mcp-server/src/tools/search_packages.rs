@@ -1,4 +1,3 @@
-use artifacthub_client::endpoints::PackageSearchParams;
 use artifacthub_client::models::SearchResponse;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
@@ -46,18 +45,28 @@ pub async fn handle_search_packages(
     }
 
     let kind = params.kind.as_deref().map(resolve_kind).transpose()?;
-    let response = server
-        .client
-        .packages
-        .search_with(&PackageSearchParams {
-            q: params.q,
-            kind,
-            repo: params.repo,
-            org: params.org,
-            limit: params.limit,
-            offset: params.offset,
-        })
-        .await?;
+    let mut search = server.client.packages().search();
+
+    if let Some(q) = params.q {
+        search = search.query(q);
+    }
+    if let Some(kind) = kind {
+        search = search.kind(kind);
+    }
+    if let Some(repo) = params.repo {
+        search = search.repo(repo);
+    }
+    if let Some(org) = params.org {
+        search = search.org(org);
+    }
+    if let Some(limit) = params.limit {
+        search = search.limit(limit);
+    }
+    if let Some(offset) = params.offset {
+        search = search.offset(offset);
+    }
+
+    let response = search.send().await?;
 
     Ok(Json(response))
 }

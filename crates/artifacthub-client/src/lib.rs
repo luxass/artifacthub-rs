@@ -6,8 +6,11 @@
 /// HTTP client for the Artifact Hub API.
 pub mod client;
 
-/// Endpoint namespaces (packages, repositories, helm, stats, security).
-pub mod endpoints;
+/// API handlers and operation builders.
+pub mod api;
+
+/// Error types returned by the client.
+pub mod error;
 
 /// Package kind mappings (Helm, Falco, OPA, etc.).
 pub mod kind;
@@ -15,7 +18,5 @@ pub mod kind;
 /// Response models for Artifact Hub API endpoints.
 pub mod models;
 
-/// Request parameter types for endpoint methods.
-pub mod params;
-
 pub use client::{ArtifactHubClient, ArtifactHubClientBuilder};
+pub use error::{ArtifactHubError, Result};

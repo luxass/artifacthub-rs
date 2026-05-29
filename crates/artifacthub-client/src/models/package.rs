@@ -1,6 +1,41 @@
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 use crate::models::ArtifactHubValue;
+use crate::models::SearchResult;
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct PackageCounts {
+    pub packages: i64,
+    pub releases: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct PackageList {
+    pub packages: Vec<SearchResult>,
+    pub count: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct ProductionUsageOrganization {
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub home_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo_image_id: Option<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub used_in_production: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(transparent)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct PackageViews(pub BTreeMap<String, BTreeMap<String, i64>>);
 
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]

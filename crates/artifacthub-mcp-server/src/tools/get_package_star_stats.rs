@@ -1,4 +1,3 @@
-use artifacthub_client::endpoints::StatsGetParams;
 use artifacthub_client::models::StarStats;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
@@ -22,12 +21,9 @@ pub async fn handle_get_package_star_stats(
 ) -> Result<Json<StarStats>, String> {
     let stats = server
         .client
-        .stats
-        .star_stats(&StatsGetParams {
-            kind: params.kind,
-            repo: params.repo,
-            name: params.name,
-        })
+        .stats()
+        .star_stats(params.kind, params.repo, params.name)
+        .send()
         .await?;
 
     Ok(Json(stats))
@@ -67,16 +63,9 @@ mod tests {
 
         Mock::given(method("GET"))
             .and(path("/packages/pkg-123/stars"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
-                {
-                    "total": 150,
-                    "dates": [
-                        { "date": "2024-01-01", "stars": 100 },
-                        { "date": "2024-02-01", "stars": 125 },
-                        { "date": "2024-03-01", "stars": 150 }
-                    ]
-                }
-            ])))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "stars": 150
+            })))
             .mount(&mock_server)
             .await;
 
@@ -92,8 +81,6 @@ mod tests {
         .await
         .unwrap();
 
-        assert_eq!(result.0.stars.len(), 1);
-        assert_eq!(result.0.stars[0].total, 150);
-        assert_eq!(result.0.stars[0].dates.len(), 3);
+        assert_eq!(result.0.stars, 150);
     }
 }

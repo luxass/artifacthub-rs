@@ -139,7 +139,7 @@ impl ArtifactHubServer {
         get_package_changelog::handle_get_package_changelog(self, p).await
     }
 
-    #[tool(description = "Get star history for a package")]
+    #[tool(description = "Get star count for a package")]
     async fn get_package_star_stats(
         &self,
         Parameters(p): Parameters<get_package_star_stats::GetStarStatsParams>,

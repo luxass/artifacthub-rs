@@ -1,0 +1,43 @@
+use crate::api::packages::{PackageRef, PackagesHandler};
+use crate::client::ArtifactHubClient;
+use crate::error::{ArtifactHubError, Result};
+use crate::models::SearchResult;
+
+impl<'client> PackagesHandler<'client> {
+    pub fn summary(
+        self,
+        kind: impl Into<String>,
+        repo: impl Into<String>,
+        name: impl Into<String>,
+    ) -> PackageSummaryBuilder<'client> {
+        PackageSummaryBuilder::new(self.client, kind, repo, name)
+    }
+}
+
+pub struct PackageSummaryBuilder<'client> {
+    client: &'client ArtifactHubClient,
+    package: PackageRef,
+}
+
+impl<'client> PackageSummaryBuilder<'client> {
+    pub(crate) fn new(
+        client: &'client ArtifactHubClient,
+        kind: impl Into<String>,
+        repo: impl Into<String>,
+        name: impl Into<String>,
+    ) -> Self {
+        Self {
+            client,
+            package: PackageRef::new(kind, repo, name),
+        }
+    }
+
+    pub async fn send(self) -> Result<SearchResult> {
+        let json = self
+            .client
+            .get_json(&self.package.path("/summary"), &[])
+            .await?;
+        serde_json::from_value(json)
+            .map_err(|e| ArtifactHubError::json("Failed to parse response", e))
+    }
+}

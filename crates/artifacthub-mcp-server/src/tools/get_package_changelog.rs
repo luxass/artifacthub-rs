@@ -1,4 +1,3 @@
-use artifacthub_client::endpoints::ChangelogParams;
 use artifacthub_client::models::Changelog;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
@@ -24,17 +23,21 @@ pub async fn handle_get_package_changelog(
     server: &ArtifactHubServer,
     params: GetChangelogParams,
 ) -> Result<Json<Changelog>, String> {
-    let changelog = server
-        .client
-        .packages
-        .changelog(&ChangelogParams {
-            kind: params.kind,
-            repo: params.repo,
-            name: params.name,
-            from: params.from,
-            to: params.to,
-        })
-        .await?;
+    let mut changelog_request =
+        server
+            .client
+            .packages()
+            .changelog(params.kind, params.repo, params.name);
+
+    if let Some(from) = params.from {
+        changelog_request = changelog_request.from(from);
+    }
+
+    if let Some(to) = params.to {
+        changelog_request = changelog_request.to(to);
+    }
+
+    let changelog = changelog_request.send().await?;
 
     Ok(Json(changelog))
 }

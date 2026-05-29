@@ -18,7 +18,7 @@ pub async fn handle_get_security_report(
 ) -> Result<Json<SecurityReport>, String> {
     let report = server
         .client
-        .packages
+        .packages()
         .security_report(&params.package_id, &params.version)
         .await?
         .unwrap_or_default();

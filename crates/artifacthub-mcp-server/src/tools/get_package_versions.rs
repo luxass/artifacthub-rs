@@ -1,4 +1,3 @@
-use artifacthub_client::endpoints::PackageGetParams;
 use artifacthub_client::models::PackageVersions;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
@@ -24,13 +23,9 @@ pub async fn handle_get_package_versions(
 ) -> Result<Json<PackageVersions>, String> {
     let mut package_versions = server
         .client
-        .packages
-        .versions(&PackageGetParams {
-            kind: params.kind,
-            repo: params.repo,
-            name: params.name,
-            version: None,
-        })
+        .packages()
+        .versions(params.kind, params.repo, params.name)
+        .send()
         .await?;
 
     if let Some(limit) = params.limit {

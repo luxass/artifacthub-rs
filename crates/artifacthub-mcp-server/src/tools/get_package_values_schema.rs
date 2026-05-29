@@ -25,7 +25,7 @@ pub async fn handle_get_values_schema(
 ) -> Result<Json<ValuesSchemaOutput>, String> {
     let schema = server
         .client
-        .packages
+        .packages()
         .values_schema(&params.package_id, &params.version)
         .await?;
 
