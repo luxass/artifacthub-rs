@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.5...artifacthub-mcp@0.2.6) - 2026-05-30
+
+### 🚜 Refactor
+
+- route MCP tools through typed client ([#12](https://github.com/luxass/artifacthub-rs/pull/12)) (by @luxass)
+
+### Contributors
+
+* @luxass
+
 ## [0.2.5](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.4...artifacthub-mcp@0.2.5) - 2026-05-28
 
 ### 🐛 Bug Fixes
