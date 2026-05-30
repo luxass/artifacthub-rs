@@ -15,6 +15,7 @@ pub struct PackageCounts {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct PackageList {
     pub packages: Vec<SearchResult>,
+    #[cfg_attr(feature = "schemars", schemars(transform = remove_format))]
     pub count: usize,
 }
 
@@ -153,6 +154,7 @@ pub struct PackageVersion {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct PackageVersions {
     pub versions: Vec<PackageVersion>,
+    #[cfg_attr(feature = "schemars", schemars(transform = remove_format))]
     pub count: usize,
 }
 
@@ -160,4 +162,9 @@ pub struct PackageVersions {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct PackageReadme {
     pub readme: String,
+}
+
+#[cfg(feature = "schemars")]
+fn remove_format(schema: &mut schemars::Schema) {
+    schema.remove("format");
 }

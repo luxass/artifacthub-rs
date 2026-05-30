@@ -16,9 +16,15 @@ pub struct SearchParams {
     pub repo: Option<String>,
     #[schemars(description = "Filter by organization name")]
     pub org: Option<String>,
-    #[schemars(description = "Number of results (max 60)")]
+    #[schemars(
+        description = "Number of results (max 60)",
+        transform = crate::tools::schema::remove_format
+    )]
     pub limit: Option<usize>,
-    #[schemars(description = "Offset for pagination")]
+    #[schemars(
+        description = "Offset for pagination",
+        transform = crate::tools::schema::remove_format
+    )]
     pub offset: Option<usize>,
 }
 

@@ -13,7 +13,10 @@ pub struct GetPackageVersionsParams {
     pub repo: String,
     #[schemars(description = "Package name")]
     pub name: String,
-    #[schemars(description = "Max versions to return (defaults to all)")]
+    #[schemars(
+        description = "Max versions to return (defaults to all)",
+        transform = crate::tools::schema::remove_format
+    )]
     pub limit: Option<usize>,
 }
 
