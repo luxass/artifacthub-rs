@@ -1,5 +1,3 @@
-use serde::Serialize;
-
 use crate::api::packages::{PackagesHandler, optional_query_params, optional_usize_query_params};
 use crate::client::ArtifactHubClient;
 use crate::error::{ArtifactHubError, Result};
@@ -11,21 +9,13 @@ impl<'client> PackagesHandler<'client> {
     }
 }
 
-#[derive(Serialize)]
 pub struct SearchPackagesBuilder<'client> {
-    #[serde(skip)]
     client: &'client ArtifactHubClient,
-    #[serde(rename = "ts_query_web", skip_serializing_if = "Option::is_none")]
     query: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     kind: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     repo: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     org: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     limit: Option<usize>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     offset: Option<usize>,
 }
 

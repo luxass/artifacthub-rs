@@ -1,5 +1,3 @@
-use serde::Serialize;
-
 use crate::client::ArtifactHubClient;
 use crate::error::{ArtifactHubError, Result};
 use crate::models::{SearchRepositoriesResponse, SearchRepositoryResult};
@@ -27,21 +25,13 @@ impl<'client> RepositoriesHandler<'client> {
     }
 }
 
-#[derive(Serialize)]
 pub struct SearchRepositoriesBuilder<'client> {
-    #[serde(skip)]
     client: &'client ArtifactHubClient,
-    #[serde(skip_serializing_if = "Option::is_none")]
     name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     kind: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     user: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     org: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     limit: Option<usize>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     offset: Option<usize>,
 }
 

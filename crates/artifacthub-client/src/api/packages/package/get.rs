@@ -1,5 +1,3 @@
-use serde::Serialize;
-
 use crate::api::packages::{PackageRef, PackagesHandler, optional_query_params};
 use crate::client::ArtifactHubClient;
 use crate::error::{ArtifactHubError, Result};
@@ -16,13 +14,9 @@ impl<'client> PackagesHandler<'client> {
     }
 }
 
-#[derive(Serialize)]
 pub struct GetPackageBuilder<'client> {
-    #[serde(skip)]
     client: &'client ArtifactHubClient,
-    #[serde(skip)]
     package: PackageRef,
-    #[serde(skip_serializing_if = "Option::is_none")]
     version: Option<String>,
 }
 

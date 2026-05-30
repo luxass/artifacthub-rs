@@ -1,5 +1,3 @@
-use serde::Serialize;
-
 use crate::client::{ArtifactHubClient, encode_path_segment, package_url};
 
 pub mod changelog;
@@ -30,7 +28,6 @@ impl<'client> PackagesHandler<'client> {
     }
 }
 
-#[derive(Serialize)]
 pub(crate) struct PackageRef {
     kind: String,
     repo: String,

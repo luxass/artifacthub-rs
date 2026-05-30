@@ -1,5 +1,3 @@
-use serde::Serialize;
-
 use crate::api::packages::{PackageRef, PackagesHandler, optional_query_params, package_id_url};
 use crate::client::ArtifactHubClient;
 use crate::error::{ArtifactHubError, Result};
@@ -32,15 +30,10 @@ impl<'client> PackagesHandler<'client> {
     }
 }
 
-#[derive(Serialize)]
 pub struct ChangelogBuilder<'client> {
-    #[serde(skip)]
     client: &'client ArtifactHubClient,
-    #[serde(skip)]
     package: PackageRef,
-    #[serde(skip_serializing_if = "Option::is_none")]
     from: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     to: Option<String>,
 }
 
@@ -86,15 +79,10 @@ impl<'client> ChangelogBuilder<'client> {
     }
 }
 
-#[derive(Serialize)]
 pub struct ChangelogByPackageIdBuilder<'client> {
-    #[serde(skip)]
     client: &'client ArtifactHubClient,
-    #[serde(skip)]
     package_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
     from: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     to: Option<String>,
 }
 
@@ -130,15 +118,10 @@ impl<'client> ChangelogByPackageIdBuilder<'client> {
     }
 }
 
-#[derive(Serialize)]
 pub struct ChangelogMarkdownBuilder<'client> {
-    #[serde(skip)]
     client: &'client ArtifactHubClient,
-    #[serde(skip)]
     package: PackageRef,
-    #[serde(skip_serializing_if = "Option::is_none")]
     from: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     to: Option<String>,
 }
 
