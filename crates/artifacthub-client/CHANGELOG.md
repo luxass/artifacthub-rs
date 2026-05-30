@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5](https://github.com/luxass/artifacthub-rs/compare/artifacthub-client@0.0.4...artifacthub-client@0.0.5) - 2026-05-30
+
+### 🐛 Bug Fixes
+
+- *(mcp)* remove Rust uint schema formats ([#14](https://github.com/luxass/artifacthub-rs/pull/14)) (by @luxass)
+
+### Contributors
+
+* @luxass
+
 ## [0.0.4](https://github.com/luxass/artifacthub-rs/compare/artifacthub-client@0.0.3...artifacthub-client@0.0.4) - 2026-05-30
 
 ### 🚜 Refactor
