@@ -1,10 +1,8 @@
-use artifacthub_client::models::ChangelogMarkdown;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 
 use crate::tools::ArtifactHubServer;
-use artifacthub_client::client::package_url;
-use artifacthub_client::kind::KIND_DESCRIPTION;
+use artifacthub_client::{kind::KIND_DESCRIPTION, models::ChangelogMarkdown};
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
 pub struct GetChangelogMdParams {
@@ -24,18 +22,23 @@ pub async fn handle_get_changelog_md(
     server: &ArtifactHubServer,
     params: GetChangelogMdParams,
 ) -> Result<Json<ChangelogMarkdown>, String> {
-    let mut query_params: Vec<(String, String)> = vec![];
-    if let Some(ref from) = params.from {
-        query_params.push(("from".to_string(), from.clone()));
-    }
-    if let Some(ref to) = params.to {
-        query_params.push(("to".to_string(), to.clone()));
+    let mut changelog_request =
+        server
+            .client
+            .packages()
+            .changelog_markdown(params.kind, params.repo, params.name);
+
+    if let Some(from) = params.from {
+        changelog_request = changelog_request.from(from);
     }
 
-    let path = package_url(&params.kind, &params.repo, &params.name, "/changelog.md");
-    let body = server.client.get(&path, &query_params).await?;
+    if let Some(to) = params.to {
+        changelog_request = changelog_request.to(to);
+    }
 
-    Ok(Json(ChangelogMarkdown { changelog: body }))
+    let changelog = changelog_request.send().await?;
+
+    Ok(Json(changelog))
 }
 
 #[cfg(test)]

@@ -1,5 +1,4 @@
 use artifacthub_client::models::PackageValues;
-use artifacthub_client::params::HelmGetParams;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 
@@ -22,16 +21,16 @@ pub async fn handle_get_package_values(
     server: &ArtifactHubServer,
     params: GetPackageValuesParams,
 ) -> Result<Json<PackageValues>, String> {
-    let values = server
+    let mut values_request = server
         .client
-        .helm
-        .values(&HelmGetParams {
-            kind: params.kind,
-            repo: params.repo,
-            name: params.name,
-            version: params.version,
-        })
-        .await?;
+        .helm()
+        .values(params.kind, params.repo, params.name);
+
+    if let Some(version) = params.version {
+        values_request = values_request.version(version);
+    }
+
+    let values = values_request.send().await?;
 
     Ok(Json(values))
 }

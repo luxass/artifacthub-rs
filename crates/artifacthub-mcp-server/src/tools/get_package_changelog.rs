@@ -1,9 +1,8 @@
-use artifacthub_client::models::{Changelog, ChangelogEntry};
+use artifacthub_client::models::Changelog;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 
 use crate::tools::ArtifactHubServer;
-use artifacthub_client::client::package_url;
 use artifacthub_client::kind::KIND_DESCRIPTION;
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
@@ -24,21 +23,23 @@ pub async fn handle_get_package_changelog(
     server: &ArtifactHubServer,
     params: GetChangelogParams,
 ) -> Result<Json<Changelog>, String> {
-    let mut query_params: Vec<(String, String)> = vec![];
-    if let Some(ref to) = params.to {
-        query_params.push(("to".to_string(), to.clone()));
+    let mut changelog_request =
+        server
+            .client
+            .packages()
+            .changelog(params.kind, params.repo, params.name);
+
+    if let Some(from) = params.from {
+        changelog_request = changelog_request.from(from);
     }
-    if let Some(ref from) = params.from {
-        query_params.push(("from".to_string(), from.clone()));
+
+    if let Some(to) = params.to {
+        changelog_request = changelog_request.to(to);
     }
 
-    let path = package_url(&params.kind, &params.repo, &params.name, "/changelog");
-    let json = server.client.get_json(&path, &query_params).await?;
+    let changelog = changelog_request.send().await?;
 
-    let entries: Vec<ChangelogEntry> =
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse changelog: {}", e))?;
-
-    Ok(Json(Changelog { entries }))
+    Ok(Json(changelog))
 }
 
 #[cfg(test)]
@@ -65,7 +66,16 @@ mod tests {
         let mock_server = MockServer::start().await;
 
         Mock::given(method("GET"))
-            .and(path("/packages/helm/bitnami/nginx/changelog"))
+            .and(path("/packages/helm/bitnami/nginx"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
+                "version": "1.3.0"
+            })))
+            .mount(&mock_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/pkg-123/changelog"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
                 {
                     "version": "1.3.0",

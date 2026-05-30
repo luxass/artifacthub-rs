@@ -1,6 +1,8 @@
 use base64::Engine;
 use serde::{Deserialize, Deserializer, Serialize};
 
+use crate::models::{ArtifactHubValue, ValuesSchemaDocument};
+
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct PackageValues {
@@ -13,17 +15,15 @@ pub struct PackageValues {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct ValuesSchema {
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(
-        feature = "schemars",
-        schemars(schema_with = "crate::models::json_value_schema")
-    )]
-    pub schema: Option<serde_json::Value>,
+    pub schema: Option<ValuesSchemaDocument>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct ChartTemplates {
     pub templates: Vec<ChartTemplate>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub values: Option<ArtifactHubValue>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -59,41 +59,10 @@ where
     Ok(Some(decoded))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn chart_template_data_is_decoded_from_base64() {
-        let template: ChartTemplate = serde_json::from_value(serde_json::json!({
-            "name": "templates/service.yaml",
-            "data": "YXBpVmVyc2lvbjogdjEKa2luZDogU2VydmljZQo=",
-        }))
-        .unwrap();
-
-        assert_eq!(
-            template.data.as_deref(),
-            Some("apiVersion: v1\nkind: Service\n")
-        );
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct StarStats {
-    pub stars: Vec<StarHistoryEntry>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
-pub struct StarHistoryEntry {
-    pub total: i32,
-    pub dates: Vec<StarDateEntry>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
-pub struct StarDateEntry {
-    pub date: String,
     pub stars: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub starred_by_user: Option<bool>,
 }

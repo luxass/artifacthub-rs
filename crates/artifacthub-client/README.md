@@ -12,19 +12,20 @@ cargo add artifacthub-client
 
 ```rust
 use artifacthub_client::ArtifactHubClient;
-use artifacthub_client::params::{
-    HelmGetParams, RepoSearchParams, SecurityGetParams, StatsGetParams,
-};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = ArtifactHubClient::new();
+    let client = ArtifactHubClient::builder()
+        .api_key("key-id", "key-secret")
+        .build();
 
     // Search for packages
     let results = client
-        .packages
+        .packages()
         .search()
         .query("nginx")
+        .repo("bitnami")
+        .limit(10)
         .send()
         .await?;
 
@@ -32,48 +33,52 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Get package details
     let package = client
-        .packages
+        .packages()
         .get("helm", "bitnami", "nginx")
+        .version("15.0.0")
         .send()
         .await?;
 
     println!("Package: {}", package.name);
 
     // Search repositories
-    let repos = client.repositories.search(&RepoSearchParams {
-        name: Some("bitnami".to_string()),
-        ..Default::default()
-    }).await?;
+    let repos = client
+        .repositories()
+        .search()
+        .name("bitnami")
+        .send()
+        .await?;
 
     println!("Found {} repositories", repos.repositories.len());
 
     // Get Helm values.yaml
-    let values = client.helm.values(&HelmGetParams {
-        kind: "helm".to_string(),
-        repo: "bitnami".to_string(),
-        name: "nginx".to_string(),
-        version: None,
-    }).await?;
+    let values = client
+        .helm()
+        .values("helm", "bitnami", "nginx")
+        .send()
+        .await?;
 
     println!("Values:\n{}", values.values);
 
     // Get star history
-    let stats = client.stats.star_stats(&StatsGetParams {
-        kind: "helm".to_string(),
-        repo: "bitnami".to_string(),
-        name: "nginx".to_string(),
-    }).await?;
+    let stats = client
+        .stats()
+        .star_stats("helm", "bitnami", "nginx")
+        .send()
+        .await?;
 
-    println!("Star entries: {}", stats.stars.len());
+    println!("Stars: {}", stats.stars);
 
     // Get security report
-    let report = client.security.report(&SecurityGetParams {
-        kind: "helm".to_string(),
-        repo: "bitnami".to_string(),
-        name: "nginx".to_string(),
-    }).await?;
+    let report = client
+        .security()
+        .report("helm", "bitnami", "nginx")
+        .send()
+        .await?;
 
-    println!("Security report: {:?}", report.summary);
+    if let Some(report) = report {
+        println!("Security report: {:?}", report.summary);
+    }
 
     Ok(())
 }

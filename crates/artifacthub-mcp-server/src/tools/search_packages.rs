@@ -44,34 +44,29 @@ pub async fn handle_search_packages(
         return Err("limit must be between 1 and 60".to_string());
     }
 
-    let mut query_params: Vec<(String, String)> = vec![];
+    let kind = params.kind.as_deref().map(resolve_kind).transpose()?;
+    let mut search = server.client.packages().search();
 
-    if let Some(q) = &params.q {
-        query_params.push(("ts_query_web".to_string(), q.clone()));
+    if let Some(q) = params.q {
+        search = search.query(q);
     }
-    if let Some(kind) = &params.kind {
-        let id = resolve_kind(kind)?;
-        query_params.push(("kind".to_string(), id));
+    if let Some(kind) = kind {
+        search = search.kind(kind);
     }
-    if let Some(repo) = &params.repo {
-        query_params.push(("repo".to_string(), repo.clone()));
+    if let Some(repo) = params.repo {
+        search = search.repo(repo);
     }
-    if let Some(org) = &params.org {
-        query_params.push(("org".to_string(), org.clone()));
+    if let Some(org) = params.org {
+        search = search.org(org);
     }
     if let Some(limit) = params.limit {
-        query_params.push(("limit".to_string(), limit.to_string()));
+        search = search.limit(limit);
     }
     if let Some(offset) = params.offset {
-        query_params.push(("offset".to_string(), offset.to_string()));
+        search = search.offset(offset);
     }
 
-    let json = server
-        .client
-        .get_json("/packages/search", &query_params)
-        .await?;
-    let response: SearchResponse =
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
+    let response = search.send().await?;
 
     Ok(Json(response))
 }

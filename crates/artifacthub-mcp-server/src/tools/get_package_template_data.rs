@@ -1,4 +1,3 @@
-use artifacthub_client::models::ChartTemplates;
 use schemars::JsonSchema;
 
 use crate::tools::ArtifactHubServer;
@@ -19,14 +18,11 @@ pub async fn handle_get_template_data(
     server: &ArtifactHubServer,
     params: GetTemplateDataParams,
 ) -> Result<String, String> {
-    let path = format!(
-        "/packages/{}/{}/templates",
-        params.package_id, params.version
-    );
-
-    let json = server.client.get_json(&path, &[]).await?;
-    let templates: ChartTemplates =
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
+    let templates = server
+        .client
+        .packages()
+        .templates(&params.package_id, &params.version)
+        .await?;
 
     let template = templates
         .templates

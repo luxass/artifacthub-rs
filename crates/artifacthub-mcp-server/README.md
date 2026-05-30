@@ -155,7 +155,7 @@ For manual installation, add to your User Settings (JSON):
 | `get_package_versions` | List all available versions for a package |
 | `get_package_changelog` | Get changelog between versions (JSON) |
 | `get_changelog_md` | Get changelog as pre-formatted markdown |
-| `get_package_star_stats` | View star history and growth |
+| `get_package_star_stats` | View package star count |
 
 ### Helm Charts
 

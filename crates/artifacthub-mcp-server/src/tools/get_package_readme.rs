@@ -3,7 +3,6 @@ use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 
 use crate::tools::ArtifactHubServer;
-use artifacthub_client::client::package_url;
 use artifacthub_client::kind::KIND_DESCRIPTION;
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
@@ -22,17 +21,18 @@ pub async fn handle_get_package_readme(
     server: &ArtifactHubServer,
     params: GetPackageReadmeParams,
 ) -> Result<Json<PackageReadme>, String> {
-    let mut query_params: Vec<(String, String)> = vec![];
-    if let Some(ref version) = params.version {
-        query_params.push(("version".to_string(), version.clone()));
+    let mut readme_request = server
+        .client
+        .packages()
+        .readme(params.kind, params.repo, params.name);
+
+    if let Some(version) = params.version {
+        readme_request = readme_request.version(version);
     }
 
-    let path = package_url(&params.kind, &params.repo, &params.name, "");
-    let json = server.client.get_json(&path, &query_params).await?;
+    let readme = readme_request.send().await?;
 
-    let readme = json["readme"].as_str().unwrap_or("").to_string();
-
-    Ok(Json(PackageReadme { readme }))
+    Ok(Json(readme))
 }
 
 #[cfg(test)]
@@ -107,9 +107,11 @@ mod tests {
                 version: None,
             },
         )
-        .await
-        .unwrap();
+        .await;
 
-        assert_eq!(result.0.readme, "");
+        assert!(matches!(
+            result,
+            Err(ref error) if error == "No readme found for this package"
+        ));
     }
 }

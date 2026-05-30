@@ -1,4 +1,4 @@
-use artifacthub_client::models::{SearchRepositoriesResponse, SearchRepositoryResult};
+use artifacthub_client::models::SearchRepositoriesResponse;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 
@@ -31,44 +31,44 @@ pub async fn handle_search_repositories(
         return Err("limit must be between 1 and 60".to_string());
     }
 
-    let mut query_params: Vec<(String, String)> = vec![];
-
-    if let Some(name) = &params.name {
-        query_params.push(("name".to_string(), name.clone()));
-    }
-    if let Some(kind) = &params.kind {
-        let id = if let Some(id) = pkg_kind::to_id(kind) {
-            id.to_string()
+    let kind = if let Some(kind) = &params.kind {
+        if let Some(id) = pkg_kind::to_id(kind) {
+            Some(id.to_string())
         } else {
             return Err(format!(
                 "Unknown kind: '{}'. Valid kinds: {}",
                 kind,
                 pkg_kind::valid_kinds().join(", ")
             ));
-        };
-        query_params.push(("kind".to_string(), id));
+        }
+    } else {
+        None
+    };
+
+    let mut search = server.client.repositories().search();
+
+    if let Some(name) = params.name {
+        search = search.name(name);
     }
-    if let Some(user) = &params.user {
-        query_params.push(("user".to_string(), user.clone()));
+    if let Some(kind) = kind {
+        search = search.kind(kind);
     }
-    if let Some(org) = &params.org {
-        query_params.push(("org".to_string(), org.clone()));
+    if let Some(user) = params.user {
+        search = search.user(user);
+    }
+    if let Some(org) = params.org {
+        search = search.org(org);
     }
     if let Some(limit) = params.limit {
-        query_params.push(("limit".to_string(), limit.to_string()));
+        search = search.limit(limit);
     }
     if let Some(offset) = params.offset {
-        query_params.push(("offset".to_string(), offset.to_string()));
+        search = search.offset(offset);
     }
 
-    let json = server
-        .client
-        .get_json("/repositories/search", &query_params)
-        .await?;
-    let repositories: Vec<SearchRepositoryResult> =
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse response: {}", e))?;
+    let repositories = search.send().await?;
 
-    Ok(Json(SearchRepositoriesResponse { repositories }))
+    Ok(Json(repositories))
 }
 
 #[cfg(test)]

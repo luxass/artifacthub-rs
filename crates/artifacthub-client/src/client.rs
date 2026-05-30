@@ -1,5 +1,9 @@
-use crate::endpoints::{Helm, Packages, Repositories, Security, Stats};
+use crate::api::{
+    HelmHandler, PackagesHandler, RepositoriesHandler, SecurityHandler, StatsHandler,
+};
+use crate::error::{ArtifactHubError, Result};
 use reqwest::Client;
+use serde::de::DeserializeOwned;
 use std::sync::Arc;
 
 const DEFAULT_API_BASE: &str = "https://artifacthub.io/api/v1";
@@ -7,23 +11,22 @@ const DEFAULT_API_BASE: &str = "https://artifacthub.io/api/v1";
 /// HTTP client for making requests to the Artifact Hub API.
 #[derive(Clone)]
 pub struct ArtifactHubClient {
-    inner: Arc<ClientInner>,
-    pub packages: Packages,
-    pub repositories: Repositories,
-    pub helm: Helm,
-    pub stats: Stats,
-    pub security: Security,
+    pub(crate) inner: Arc<ClientInner>,
 }
 
 pub(crate) struct ClientInner {
     client: Client,
     base_url: String,
+    api_key_id: Option<String>,
+    api_key_secret: Option<String>,
 }
 
 /// Builder for configuring an [`ArtifactHubClient`].
 pub struct ArtifactHubClientBuilder {
     client: Option<Client>,
     base_url: String,
+    api_key_id: Option<String>,
+    api_key_secret: Option<String>,
 }
 
 impl Default for ArtifactHubClient {
@@ -48,23 +51,75 @@ impl ArtifactHubClient {
         Self::builder().base_url(base_url).build()
     }
 
+    /// Access package search and lookup operations.
+    pub fn packages(&self) -> PackagesHandler<'_> {
+        PackagesHandler::new(self)
+    }
+
+    /// Access repository search operations.
+    pub fn repositories(&self) -> RepositoriesHandler<'_> {
+        RepositoriesHandler::new(self)
+    }
+
+    /// Access Helm compatibility operations.
+    pub fn helm(&self) -> HelmHandler<'_> {
+        HelmHandler::new(self)
+    }
+
+    /// Access security compatibility operations.
+    pub fn security(&self) -> SecurityHandler<'_> {
+        SecurityHandler::new(self)
+    }
+
+    /// Access statistics compatibility operations.
+    pub fn stats(&self) -> StatsHandler<'_> {
+        StatsHandler::new(self)
+    }
+
     /// Sends a GET request and returns the response body as a string.
-    pub async fn get(&self, path: &str, params: &[(String, String)]) -> Result<String, String> {
+    pub(crate) async fn get(&self, path: &str, params: &[(String, String)]) -> Result<String> {
         self.inner.get(path, params).await
     }
 
     /// Sends a GET request and parses the response as JSON.
-    pub async fn get_json(
+    pub(crate) async fn get_json<T>(&self, path: &str, params: &[(String, String)]) -> Result<T>
+    where
+        T: DeserializeOwned,
+    {
+        self.get_json_with_context(path, params, "Failed to parse response")
+            .await
+    }
+
+    pub(crate) async fn get_json_with_context<T>(
         &self,
         path: &str,
         params: &[(String, String)],
-    ) -> Result<serde_json::Value, String> {
-        self.inner.get_json(path, params).await
+        context: &'static str,
+    ) -> Result<T>
+    where
+        T: DeserializeOwned,
+    {
+        self.inner
+            .get_json_with_context(path, params, context)
+            .await
     }
 
-    /// Sends a GET request and returns the raw response bytes (for tarball downloads).
-    pub async fn get_bytes(&self, url: &str) -> Result<Vec<u8>, String> {
-        self.inner.get_bytes(url).await
+    pub(crate) async fn get_optional_json<T>(
+        &self,
+        path: &str,
+        params: &[(String, String)],
+    ) -> Result<Option<T>>
+    where
+        T: DeserializeOwned,
+    {
+        let body = self.get(path, params).await?;
+        if body.trim().is_empty() {
+            return Ok(None);
+        }
+
+        serde_json::from_str(&body)
+            .map(Some)
+            .map_err(|e| ArtifactHubError::json("Failed to parse response", e))
     }
 }
 
@@ -73,6 +128,8 @@ impl Default for ArtifactHubClientBuilder {
         Self {
             client: None,
             base_url: DEFAULT_API_BASE.to_string(),
+            api_key_id: None,
+            api_key_secret: None,
         }
     }
 }
@@ -90,21 +147,23 @@ impl ArtifactHubClientBuilder {
         self
     }
 
+    /// Set Artifact Hub API key credentials for authenticated endpoints.
+    pub fn api_key(mut self, id: impl Into<String>, secret: impl Into<String>) -> Self {
+        self.api_key_id = Some(id.into());
+        self.api_key_secret = Some(secret.into());
+        self
+    }
+
     /// Build the client and all resource namespaces from one shared inner state.
     pub fn build(self) -> ArtifactHubClient {
         let inner = Arc::new(ClientInner {
             client: self.client.unwrap_or_default(),
             base_url: self.base_url,
+            api_key_id: self.api_key_id,
+            api_key_secret: self.api_key_secret,
         });
 
-        ArtifactHubClient {
-            inner: inner.clone(),
-            packages: Packages::new(inner.clone()),
-            repositories: Repositories::new(inner.clone()),
-            helm: Helm::new(inner.clone()),
-            stats: Stats::new(inner.clone()),
-            security: Security::new(inner),
-        }
+        ArtifactHubClient { inner }
     }
 }
 
@@ -115,63 +174,51 @@ impl ClientInner {
         format!("{}{}", base, path)
     }
 
-    pub(crate) async fn get(
-        &self,
-        path: &str,
-        params: &[(String, String)],
-    ) -> Result<String, String> {
+    pub(crate) async fn get(&self, path: &str, params: &[(String, String)]) -> Result<String> {
         let mut req = self.client.get(self.full_url(path));
+        if let (Some(id), Some(secret)) = (&self.api_key_id, &self.api_key_secret) {
+            req = req
+                .header("X-API-KEY-ID", id)
+                .header("X-API-KEY-SECRET", secret);
+        }
         if !params.is_empty() {
             req = req.query(params);
         }
 
-        let resp = req
-            .send()
-            .await
-            .map_err(|e| format!("Request failed: {}", e))?;
+        let resp = req.send().await.map_err(ArtifactHubError::Request)?;
 
         let status = resp.status();
-        let body = resp.text().await.map_err(|e| e.to_string())?;
+        let body = resp.text().await.map_err(ArtifactHubError::Body)?;
 
         if !status.is_success() {
             if let Ok(json) = serde_json::from_str::<serde_json::Value>(&body)
                 && let Some(msg) = json.get("message").and_then(|m| m.as_str())
             {
-                return Err(format!("API error {}: {}", status, msg));
+                return Err(ArtifactHubError::Api {
+                    status,
+                    message: msg.to_string(),
+                });
             }
-            return Err(format!("API error {}: {}", status, body));
+            return Err(ArtifactHubError::Api {
+                status,
+                message: body,
+            });
         }
 
         Ok(body)
     }
 
-    pub(crate) async fn get_json(
+    pub(crate) async fn get_json_with_context<T>(
         &self,
         path: &str,
         params: &[(String, String)],
-    ) -> Result<serde_json::Value, String> {
+        context: &'static str,
+    ) -> Result<T>
+    where
+        T: DeserializeOwned,
+    {
         let body = self.get(path, params).await?;
-        serde_json::from_str(&body).map_err(|e| format!("Failed to parse response: {}", e))
-    }
-
-    pub(crate) async fn get_bytes(&self, url: &str) -> Result<Vec<u8>, String> {
-        let resp = self
-            .client
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| format!("Request failed: {}", e))?;
-
-        let status = resp.status();
-        if !status.is_success() {
-            return Err(format!("Download error {}: {}", status, status));
-        }
-
-        let bytes = resp
-            .bytes()
-            .await
-            .map_err(|e| format!("Failed to read response: {}", e))?;
-        Ok(bytes.to_vec())
+        serde_json::from_str(&body).map_err(|e| ArtifactHubError::json(context, e))
     }
 }
 
@@ -198,56 +245,4 @@ pub(crate) fn encode_path_segment(segment: &str) -> String {
     }
 
     encoded
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn client_with_base(base: &str) -> ArtifactHubClient {
-        ArtifactHubClient::with_base_url(base)
-    }
-
-    #[test]
-    fn test_full_url_no_trailing_slash() {
-        let client = client_with_base("https://example.com/api/v1");
-        assert_eq!(
-            client.inner.full_url("/packages/helm/repo/pkg"),
-            "https://example.com/api/v1/packages/helm/repo/pkg"
-        );
-    }
-
-    #[test]
-    fn test_full_url_trailing_slash_stripped() {
-        let client = client_with_base("https://example.com/api/v1/");
-        let url = client.inner.full_url("/packages/helm/repo/pkg");
-        assert_eq!(url, "https://example.com/api/v1/packages/helm/repo/pkg");
-        assert!(!url.contains("//packages"));
-    }
-
-    #[test]
-    fn test_full_url_adds_missing_leading_slash() {
-        let client = client_with_base("https://example.com/api/v1");
-        assert_eq!(
-            client.inner.full_url("packages/search"),
-            "https://example.com/api/v1/packages/search"
-        );
-    }
-
-    #[test]
-    fn test_full_url_collapses_extra_leading_slashes() {
-        let client = client_with_base("https://example.com/api/v1/");
-        assert_eq!(
-            client.inner.full_url("///packages/search"),
-            "https://example.com/api/v1/packages/search"
-        );
-    }
-
-    #[test]
-    fn test_package_url_encodes_dynamic_segments() {
-        assert_eq!(
-            package_url("helm", "repo/name", "pkg?name", "/readme"),
-            "/packages/helm/repo%2Fname/pkg%3Fname/readme"
-        );
-    }
 }

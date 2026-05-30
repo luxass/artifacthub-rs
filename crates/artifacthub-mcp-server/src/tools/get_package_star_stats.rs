@@ -1,9 +1,8 @@
-use artifacthub_client::models::{StarHistoryEntry, StarStats};
+use artifacthub_client::models::StarStats;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
 
 use crate::tools::ArtifactHubServer;
-use artifacthub_client::client::package_url;
 use artifacthub_client::kind::KIND_DESCRIPTION;
 
 #[derive(Debug, serde::Deserialize, JsonSchema)]
@@ -20,13 +19,14 @@ pub async fn handle_get_package_star_stats(
     server: &ArtifactHubServer,
     params: GetStarStatsParams,
 ) -> Result<Json<StarStats>, String> {
-    let path = package_url(&params.kind, &params.repo, &params.name, "/stars");
-    let json = server.client.get_json(&path, &[]).await?;
+    let stats = server
+        .client
+        .stats()
+        .star_stats(params.kind, params.repo, params.name)
+        .send()
+        .await?;
 
-    let stars: Vec<StarHistoryEntry> =
-        serde_json::from_value(json).map_err(|e| format!("Failed to parse star stats: {}", e))?;
-
-    Ok(Json(StarStats { stars }))
+    Ok(Json(stats))
 }
 
 #[cfg(test)]
@@ -53,17 +53,19 @@ mod tests {
         let mock_server = MockServer::start().await;
 
         Mock::given(method("GET"))
-            .and(path("/packages/helm/bitnami/nginx/stars"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
-                {
-                    "total": 150,
-                    "dates": [
-                        { "date": "2024-01-01", "stars": 100 },
-                        { "date": "2024-02-01", "stars": 125 },
-                        { "date": "2024-03-01", "stars": 150 }
-                    ]
-                }
-            ])))
+            .and(path("/packages/helm/bitnami/nginx"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
+                "version": "1.2.3"
+            })))
+            .mount(&mock_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/pkg-123/stars"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "stars": 150
+            })))
             .mount(&mock_server)
             .await;
 
@@ -79,8 +81,6 @@ mod tests {
         .await
         .unwrap();
 
-        assert_eq!(result.0.stars.len(), 1);
-        assert_eq!(result.0.stars[0].total, 150);
-        assert_eq!(result.0.stars[0].dates.len(), 3);
+        assert_eq!(result.0.stars, 150);
     }
 }
