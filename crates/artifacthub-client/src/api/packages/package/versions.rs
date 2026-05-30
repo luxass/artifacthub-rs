@@ -1,7 +1,13 @@
 use crate::api::packages::{PackageRef, PackagesHandler};
 use crate::client::ArtifactHubClient;
-use crate::error::{ArtifactHubError, Result};
+use crate::error::Result;
 use crate::models::{PackageVersion, PackageVersions};
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct PackageVersionsResponse {
+    available_versions: Vec<PackageVersion>,
+}
 
 impl<'client> PackagesHandler<'client> {
     pub fn versions(
@@ -33,10 +39,11 @@ impl<'client> PackageVersionsBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<PackageVersions> {
-        let json = self.client.get_json(&self.package.path(""), &[]).await?;
-        let versions: Vec<PackageVersion> =
-            serde_json::from_value(json["available_versions"].clone())
-                .map_err(|e| ArtifactHubError::json("Failed to parse versions", e))?;
+        let response: PackageVersionsResponse = self
+            .client
+            .get_json_with_context(&self.package.path(""), &[], "Failed to parse versions")
+            .await?;
+        let versions = response.available_versions;
 
         Ok(PackageVersions {
             count: versions.len(),

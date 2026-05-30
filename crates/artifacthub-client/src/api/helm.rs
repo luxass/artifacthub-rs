@@ -1,6 +1,13 @@
 use crate::client::{ArtifactHubClient, package_url};
 use crate::error::{ArtifactHubError, Result};
 use crate::models::{ChartTemplates, PackageValues, ValuesSchema};
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct PackageIdentityResponse {
+    package_id: Option<String>,
+    version: Option<String>,
+}
 
 #[derive(Clone, Copy)]
 pub struct HelmHandler<'client> {
@@ -181,16 +188,14 @@ impl HelmPackageRef {
             .map(|version| vec![("version".to_string(), version.to_string())])
             .unwrap_or_default();
         let path = package_url(&self.kind, &self.repo, &self.name, "");
-        let json = client.get_json(&path, &query_params).await?;
+        let response: PackageIdentityResponse = client.get_json(&path, &query_params).await?;
 
-        let package_id = json["package_id"]
-            .as_str()
-            .ok_or_else(|| ArtifactHubError::missing_field("package_id", "this package"))?
-            .to_string();
-        let version = json["version"]
-            .as_str()
-            .ok_or_else(|| ArtifactHubError::missing_field("version", "this package"))?
-            .to_string();
+        let package_id = response
+            .package_id
+            .ok_or_else(|| ArtifactHubError::missing_field("package_id", "this package"))?;
+        let version = response
+            .version
+            .ok_or_else(|| ArtifactHubError::missing_field("version", "this package"))?;
 
         Ok((package_id, version))
     }

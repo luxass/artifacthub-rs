@@ -3,6 +3,7 @@ use crate::api::{
 };
 use crate::error::{ArtifactHubError, Result};
 use reqwest::Client;
+use serde::de::DeserializeOwned;
 use std::sync::Arc;
 
 const DEFAULT_API_BASE: &str = "https://artifacthub.io/api/v1";
@@ -81,12 +82,44 @@ impl ArtifactHubClient {
     }
 
     /// Sends a GET request and parses the response as JSON.
-    pub(crate) async fn get_json(
+    pub(crate) async fn get_json<T>(&self, path: &str, params: &[(String, String)]) -> Result<T>
+    where
+        T: DeserializeOwned,
+    {
+        self.get_json_with_context(path, params, "Failed to parse response")
+            .await
+    }
+
+    pub(crate) async fn get_json_with_context<T>(
         &self,
         path: &str,
         params: &[(String, String)],
-    ) -> Result<serde_json::Value> {
-        self.inner.get_json(path, params).await
+        context: &'static str,
+    ) -> Result<T>
+    where
+        T: DeserializeOwned,
+    {
+        self.inner
+            .get_json_with_context(path, params, context)
+            .await
+    }
+
+    pub(crate) async fn get_optional_json<T>(
+        &self,
+        path: &str,
+        params: &[(String, String)],
+    ) -> Result<Option<T>>
+    where
+        T: DeserializeOwned,
+    {
+        let body = self.get(path, params).await?;
+        if body.trim().is_empty() {
+            return Ok(None);
+        }
+
+        serde_json::from_str(&body)
+            .map(Some)
+            .map_err(|e| ArtifactHubError::json("Failed to parse response", e))
     }
 }
 
@@ -175,14 +208,17 @@ impl ClientInner {
         Ok(body)
     }
 
-    pub(crate) async fn get_json(
+    pub(crate) async fn get_json_with_context<T>(
         &self,
         path: &str,
         params: &[(String, String)],
-    ) -> Result<serde_json::Value> {
+        context: &'static str,
+    ) -> Result<T>
+    where
+        T: DeserializeOwned,
+    {
         let body = self.get(path, params).await?;
-        serde_json::from_str(&body)
-            .map_err(|e| ArtifactHubError::json("Failed to parse response", e))
+        serde_json::from_str(&body).map_err(|e| ArtifactHubError::json(context, e))
     }
 }
 

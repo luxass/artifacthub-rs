@@ -1,6 +1,6 @@
 use crate::api::packages::{PackageRef, PackagesHandler, optional_query_params};
 use crate::client::ArtifactHubClient;
-use crate::error::{ArtifactHubError, Result};
+use crate::error::Result;
 use crate::models::PackageSummary;
 
 impl<'client> PackagesHandler<'client> {
@@ -42,8 +42,6 @@ impl<'client> GetPackageBuilder<'client> {
     pub async fn send(self) -> Result<PackageSummary> {
         let path = self.package.path("");
         let query = optional_query_params([("version", self.version.as_deref())]);
-        let json = self.client.get_json(&path, &query).await?;
-        serde_json::from_value(json)
-            .map_err(|e| ArtifactHubError::json("Failed to parse response", e))
+        self.client.get_json(&path, &query).await
     }
 }

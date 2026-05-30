@@ -1,5 +1,5 @@
 use crate::client::ArtifactHubClient;
-use crate::error::{ArtifactHubError, Result};
+use crate::error::Result;
 use crate::models::{SearchRepositoriesResponse, SearchRepositoryResult};
 
 #[derive(Clone, Copy)]
@@ -67,12 +67,10 @@ impl<'client> SearchRepositoriesBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<SearchRepositoriesResponse> {
-        let json = self
+        let repositories: Vec<SearchRepositoryResult> = self
             .client
             .get_json("/repositories/search", &self.query_params())
             .await?;
-        let repositories: Vec<SearchRepositoryResult> = serde_json::from_value(json)
-            .map_err(|e| ArtifactHubError::json("Failed to parse response", e))?;
 
         Ok(SearchRepositoriesResponse { repositories })
     }

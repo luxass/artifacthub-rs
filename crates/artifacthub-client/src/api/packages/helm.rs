@@ -1,5 +1,5 @@
 use crate::api::packages::{PackagesHandler, package_version_url};
-use crate::error::{ArtifactHubError, Result};
+use crate::error::Result;
 use crate::models::{ChartTemplates, ValuesSchemaDocument};
 
 impl<'client> PackagesHandler<'client> {
@@ -14,19 +14,11 @@ impl<'client> PackagesHandler<'client> {
         version: &str,
     ) -> Result<Option<ValuesSchemaDocument>> {
         let path = package_version_url(package_id, version, "/values-schema");
-        let body = self.client.get(&path, &[]).await?;
-        if body.trim().is_empty() {
-            return Ok(None);
-        }
-        serde_json::from_str(&body)
-            .map(Some)
-            .map_err(|e| ArtifactHubError::json("Failed to parse response", e))
+        self.client.get_optional_json(&path, &[]).await
     }
 
     pub async fn templates(self, package_id: &str, version: &str) -> Result<ChartTemplates> {
         let path = package_version_url(package_id, version, "/templates");
-        let json = self.client.get_json(&path, &[]).await?;
-        serde_json::from_value(json)
-            .map_err(|e| ArtifactHubError::json("Failed to parse response", e))
+        self.client.get_json(&path, &[]).await
     }
 }

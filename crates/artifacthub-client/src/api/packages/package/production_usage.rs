@@ -1,6 +1,6 @@
 use crate::api::packages::{PackageRef, PackagesHandler};
 use crate::client::ArtifactHubClient;
-use crate::error::{ArtifactHubError, Result};
+use crate::error::Result;
 use crate::models::ProductionUsageOrganization;
 
 impl<'client> PackagesHandler<'client> {
@@ -33,11 +33,8 @@ impl<'client> ProductionUsageBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<Vec<ProductionUsageOrganization>> {
-        let json = self
-            .client
+        self.client
             .get_json(&self.package.path("/production-usage"), &[])
-            .await?;
-        serde_json::from_value(json)
-            .map_err(|e| ArtifactHubError::json("Failed to parse response", e))
+            .await
     }
 }

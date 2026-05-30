@@ -2,6 +2,12 @@ use crate::api::packages::{PackageRef, PackagesHandler, optional_query_params, p
 use crate::client::ArtifactHubClient;
 use crate::error::{ArtifactHubError, Result};
 use crate::models::{Changelog, ChangelogEntry, ChangelogMarkdown};
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct PackageIdResponse {
+    package_id: Option<String>,
+}
 
 impl<'client> PackagesHandler<'client> {
     pub fn changelog(
@@ -63,14 +69,14 @@ impl<'client> ChangelogBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<Changelog> {
-        let package = self.client.get_json(&self.package.path(""), &[]).await?;
-        let package_id = package["package_id"]
-            .as_str()
+        let package: PackageIdResponse = self.client.get_json(&self.package.path(""), &[]).await?;
+        let package_id = package
+            .package_id
             .ok_or_else(|| ArtifactHubError::missing_field("package_id", "this package"))?;
 
         ChangelogByPackageIdBuilder {
             client: self.client,
-            package_id: package_id.to_string(),
+            package_id,
             from: self.from,
             to: self.to,
         }
@@ -110,9 +116,7 @@ impl<'client> ChangelogByPackageIdBuilder<'client> {
         let path = package_id_url(&self.package_id, "/changelog");
         let query =
             optional_query_params([("from", self.from.as_deref()), ("to", self.to.as_deref())]);
-        let json = self.client.get_json(&path, &query).await?;
-        let entries: Vec<ChangelogEntry> = serde_json::from_value(json)
-            .map_err(|e| ArtifactHubError::json("Failed to parse response", e))?;
+        let entries: Vec<ChangelogEntry> = self.client.get_json(&path, &query).await?;
 
         Ok(Changelog { entries })
     }

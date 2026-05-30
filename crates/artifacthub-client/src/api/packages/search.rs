@@ -1,6 +1,6 @@
 use crate::api::packages::{PackagesHandler, optional_query_params, optional_usize_query_params};
 use crate::client::ArtifactHubClient;
-use crate::error::{ArtifactHubError, Result};
+use crate::error::Result;
 use crate::models::SearchResponse;
 
 impl<'client> PackagesHandler<'client> {
@@ -63,12 +63,9 @@ impl<'client> SearchPackagesBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<SearchResponse> {
-        let json = self
-            .client
+        self.client
             .get_json("/packages/search", &self.query_params())
-            .await?;
-        serde_json::from_value(json)
-            .map_err(|e| ArtifactHubError::json("Failed to parse response", e))
+            .await
     }
 
     fn query_params(&self) -> Vec<(String, String)> {
