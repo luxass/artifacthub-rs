@@ -11,6 +11,7 @@ pub mod get_package_values;
 pub mod get_package_values_schema;
 pub mod get_package_versions;
 pub mod get_server_info;
+pub mod schema;
 pub mod search_packages;
 pub mod search_repositories;
 
