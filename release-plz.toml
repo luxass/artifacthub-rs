@@ -16,7 +16,7 @@ git_release_name = "artifacthub-client@{{ version }}"
 
 [[package]]
 name = "artifacthub-mcp"
-semver_check = false
+semver_check = true
 changelog_include = ["artifacthub-client"]
 git_tag_enable = true
 git_tag_name = "artifacthub-mcp@{{ version }}"
