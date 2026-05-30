@@ -1,13 +1,7 @@
-use crate::client::{ArtifactHubClient, package_url};
-use crate::error::{ArtifactHubError, Result};
+use crate::api::packages::PackageReference;
+use crate::client::ArtifactHubClient;
+use crate::error::Result;
 use crate::models::{ChartTemplates, PackageValues, ValuesSchema};
-use serde::Deserialize;
-
-#[derive(Deserialize)]
-struct PackageIdentityResponse {
-    package_id: Option<String>,
-    version: Option<String>,
-}
 
 #[derive(Clone, Copy)]
 pub struct HelmHandler<'client> {
@@ -49,7 +43,7 @@ impl<'client> HelmHandler<'client> {
 
 pub struct HelmValuesBuilder<'client> {
     client: &'client ArtifactHubClient,
-    package: HelmPackageRef,
+    package: PackageReference,
     version: Option<String>,
 }
 
@@ -62,7 +56,7 @@ impl<'client> HelmValuesBuilder<'client> {
     ) -> Self {
         Self {
             client,
-            package: HelmPackageRef::new(kind, repo, name),
+            package: PackageReference::new(kind, repo, name),
             version: None,
         }
     }
@@ -73,15 +67,19 @@ impl<'client> HelmValuesBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<PackageValues> {
-        let (package_id, version) = self
+        let identity = self
             .package
-            .resolve(self.client, self.version.as_deref())
+            .resolve_identity(self.client, self.version.as_deref())
             .await?;
-        let values = self.client.packages().values(&package_id, &version).await?;
+        let values = self
+            .client
+            .packages()
+            .values(&identity.package_id, &identity.version)
+            .await?;
 
         Ok(PackageValues {
-            package: self.package.name,
-            version,
+            package: self.package.name().to_string(),
+            version: identity.version,
             values,
         })
     }
@@ -89,7 +87,7 @@ impl<'client> HelmValuesBuilder<'client> {
 
 pub struct HelmValuesSchemaBuilder<'client> {
     client: &'client ArtifactHubClient,
-    package: HelmPackageRef,
+    package: PackageReference,
     version: Option<String>,
 }
 
@@ -102,7 +100,7 @@ impl<'client> HelmValuesSchemaBuilder<'client> {
     ) -> Self {
         Self {
             client,
-            package: HelmPackageRef::new(kind, repo, name),
+            package: PackageReference::new(kind, repo, name),
             version: None,
         }
     }
@@ -113,14 +111,14 @@ impl<'client> HelmValuesSchemaBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<ValuesSchema> {
-        let (package_id, version) = self
+        let identity = self
             .package
-            .resolve(self.client, self.version.as_deref())
+            .resolve_identity(self.client, self.version.as_deref())
             .await?;
         let schema = self
             .client
             .packages()
-            .values_schema(&package_id, &version)
+            .values_schema(&identity.package_id, &identity.version)
             .await?;
 
         Ok(ValuesSchema { schema })
@@ -129,7 +127,7 @@ impl<'client> HelmValuesSchemaBuilder<'client> {
 
 pub struct HelmTemplatesBuilder<'client> {
     client: &'client ArtifactHubClient,
-    package: HelmPackageRef,
+    package: PackageReference,
     version: Option<String>,
 }
 
@@ -142,7 +140,7 @@ impl<'client> HelmTemplatesBuilder<'client> {
     ) -> Self {
         Self {
             client,
-            package: HelmPackageRef::new(kind, repo, name),
+            package: PackageReference::new(kind, repo, name),
             version: None,
         }
     }
@@ -153,50 +151,13 @@ impl<'client> HelmTemplatesBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<ChartTemplates> {
-        let (package_id, version) = self
+        let identity = self
             .package
-            .resolve(self.client, self.version.as_deref())
+            .resolve_identity(self.client, self.version.as_deref())
             .await?;
         self.client
             .packages()
-            .templates(&package_id, &version)
+            .templates(&identity.package_id, &identity.version)
             .await
-    }
-}
-
-struct HelmPackageRef {
-    kind: String,
-    repo: String,
-    name: String,
-}
-
-impl HelmPackageRef {
-    fn new(kind: impl Into<String>, repo: impl Into<String>, name: impl Into<String>) -> Self {
-        Self {
-            kind: kind.into(),
-            repo: repo.into(),
-            name: name.into(),
-        }
-    }
-
-    async fn resolve(
-        &self,
-        client: &ArtifactHubClient,
-        version: Option<&str>,
-    ) -> Result<(String, String)> {
-        let query_params = version
-            .map(|version| vec![("version".to_string(), version.to_string())])
-            .unwrap_or_default();
-        let path = package_url(&self.kind, &self.repo, &self.name, "");
-        let response: PackageIdentityResponse = client.get_json(&path, &query_params).await?;
-
-        let package_id = response
-            .package_id
-            .ok_or_else(|| ArtifactHubError::missing_field("package_id", "this package"))?;
-        let version = response
-            .version
-            .ok_or_else(|| ArtifactHubError::missing_field("version", "this package"))?;
-
-        Ok((package_id, version))
     }
 }

@@ -1,4 +1,4 @@
-use crate::api::packages::{PackageRef, PackagesHandler};
+use crate::api::packages::{PackageReference, PackagesHandler};
 use crate::client::ArtifactHubClient;
 use crate::error::Result;
 use crate::models::SearchResult;
@@ -16,7 +16,7 @@ impl<'client> PackagesHandler<'client> {
 
 pub struct PackageSummaryBuilder<'client> {
     client: &'client ArtifactHubClient,
-    package: PackageRef,
+    package: PackageReference,
 }
 
 impl<'client> PackageSummaryBuilder<'client> {
@@ -28,7 +28,7 @@ impl<'client> PackageSummaryBuilder<'client> {
     ) -> Self {
         Self {
             client,
-            package: PackageRef::new(kind, repo, name),
+            package: PackageReference::new(kind, repo, name),
         }
     }
 

@@ -1,4 +1,4 @@
-use crate::api::packages::{PackageRef, PackagesHandler, version_suffix};
+use crate::api::packages::{PackageReference, PackagesHandler, version_suffix};
 use crate::client::ArtifactHubClient;
 use crate::error::Result;
 use crate::models::PackageSummary;
@@ -17,7 +17,7 @@ impl<'client> PackagesHandler<'client> {
 
 pub struct GetPackageVersionBuilder<'client> {
     client: &'client ArtifactHubClient,
-    package: PackageRef,
+    package: PackageReference,
     version: String,
 }
 
@@ -31,7 +31,7 @@ impl<'client> GetPackageVersionBuilder<'client> {
     ) -> Self {
         Self {
             client,
-            package: PackageRef::new(kind, repo, name),
+            package: PackageReference::new(kind, repo, name),
             version: version.into(),
         }
     }

@@ -1,4 +1,4 @@
-use crate::api::packages::{PackageRef, PackagesHandler, optional_query_params};
+use crate::api::packages::{PackageReference, PackagesHandler, optional_query_params};
 use crate::client::ArtifactHubClient;
 use crate::error::Result;
 use crate::models::PackageSummary;
@@ -16,7 +16,7 @@ impl<'client> PackagesHandler<'client> {
 
 pub struct GetPackageBuilder<'client> {
     client: &'client ArtifactHubClient,
-    package: PackageRef,
+    package: PackageReference,
     version: Option<String>,
 }
 
@@ -29,7 +29,7 @@ impl<'client> GetPackageBuilder<'client> {
     ) -> Self {
         Self {
             client,
-            package: PackageRef::new(kind, repo, name),
+            package: PackageReference::new(kind, repo, name),
             version: None,
         }
     }

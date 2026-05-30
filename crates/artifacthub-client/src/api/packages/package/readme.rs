@@ -1,4 +1,4 @@
-use crate::api::packages::{PackageRef, PackagesHandler, optional_query_params};
+use crate::api::packages::{PackageReference, PackagesHandler, optional_query_params};
 use crate::client::ArtifactHubClient;
 use crate::error::{ArtifactHubError, Result};
 use crate::models::PackageReadme;
@@ -22,7 +22,7 @@ impl<'client> PackagesHandler<'client> {
 
 pub struct ReadmeBuilder<'client> {
     client: &'client ArtifactHubClient,
-    package: PackageRef,
+    package: PackageReference,
     version: Option<String>,
 }
 
@@ -35,7 +35,7 @@ impl<'client> ReadmeBuilder<'client> {
     ) -> Self {
         Self {
             client,
-            package: PackageRef::new(kind, repo, name),
+            package: PackageReference::new(kind, repo, name),
             version: None,
         }
     }

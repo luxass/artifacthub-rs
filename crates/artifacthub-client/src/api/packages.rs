@@ -1,9 +1,10 @@
-use crate::client::{ArtifactHubClient, encode_path_segment, package_url};
+use crate::client::{ArtifactHubClient, encode_path_segment};
 
 pub mod changelog;
 pub mod helm;
 pub mod list;
 pub mod package;
+pub(crate) mod reference;
 pub mod search;
 pub mod security;
 pub mod stats;
@@ -17,6 +18,8 @@ pub use package::{
 };
 pub use search::SearchPackagesBuilder;
 
+pub(crate) use reference::PackageReference;
+
 #[derive(Clone, Copy)]
 pub struct PackagesHandler<'client> {
     pub(crate) client: &'client ArtifactHubClient,
@@ -25,30 +28,6 @@ pub struct PackagesHandler<'client> {
 impl<'client> PackagesHandler<'client> {
     pub(crate) fn new(client: &'client ArtifactHubClient) -> Self {
         Self { client }
-    }
-}
-
-pub(crate) struct PackageRef {
-    kind: String,
-    repo: String,
-    name: String,
-}
-
-impl PackageRef {
-    pub(crate) fn new(
-        kind: impl Into<String>,
-        repo: impl Into<String>,
-        name: impl Into<String>,
-    ) -> Self {
-        Self {
-            kind: kind.into(),
-            repo: repo.into(),
-            name: name.into(),
-        }
-    }
-
-    pub(crate) fn path(&self, suffix: &str) -> String {
-        package_url(&self.kind, &self.repo, &self.name, suffix)
     }
 }
 

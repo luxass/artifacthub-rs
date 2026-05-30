@@ -1,13 +1,9 @@
-use crate::api::packages::{PackageRef, PackagesHandler, optional_query_params, package_id_url};
+use crate::api::packages::{
+    PackageReference, PackagesHandler, optional_query_params, package_id_url,
+};
 use crate::client::ArtifactHubClient;
-use crate::error::{ArtifactHubError, Result};
+use crate::error::Result;
 use crate::models::{Changelog, ChangelogEntry, ChangelogMarkdown};
-use serde::Deserialize;
-
-#[derive(Deserialize)]
-struct PackageIdResponse {
-    package_id: Option<String>,
-}
 
 impl<'client> PackagesHandler<'client> {
     pub fn changelog(
@@ -38,7 +34,7 @@ impl<'client> PackagesHandler<'client> {
 
 pub struct ChangelogBuilder<'client> {
     client: &'client ArtifactHubClient,
-    package: PackageRef,
+    package: PackageReference,
     from: Option<String>,
     to: Option<String>,
 }
@@ -52,7 +48,7 @@ impl<'client> ChangelogBuilder<'client> {
     ) -> Self {
         Self {
             client,
-            package: PackageRef::new(kind, repo, name),
+            package: PackageReference::new(kind, repo, name),
             from: None,
             to: None,
         }
@@ -69,10 +65,7 @@ impl<'client> ChangelogBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<Changelog> {
-        let package: PackageIdResponse = self.client.get_json(&self.package.path(""), &[]).await?;
-        let package_id = package
-            .package_id
-            .ok_or_else(|| ArtifactHubError::missing_field("package_id", "this package"))?;
+        let package_id = self.package.resolve_package_id(self.client).await?;
 
         ChangelogByPackageIdBuilder {
             client: self.client,
@@ -124,7 +117,7 @@ impl<'client> ChangelogByPackageIdBuilder<'client> {
 
 pub struct ChangelogMarkdownBuilder<'client> {
     client: &'client ArtifactHubClient,
-    package: PackageRef,
+    package: PackageReference,
     from: Option<String>,
     to: Option<String>,
 }
@@ -138,7 +131,7 @@ impl<'client> ChangelogMarkdownBuilder<'client> {
     ) -> Self {
         Self {
             client,
-            package: PackageRef::new(kind, repo, name),
+            package: PackageReference::new(kind, repo, name),
             from: None,
             to: None,
         }
