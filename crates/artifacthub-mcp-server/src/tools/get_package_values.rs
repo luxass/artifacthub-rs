@@ -126,4 +126,41 @@ mod tests {
         };
         assert!(err.contains("No package_id"));
     }
+
+    #[tokio::test]
+    async fn test_get_package_values_with_version_uses_path() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/helm/bitnami/nginx/2.0.0"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
+                "name": "nginx",
+                "version": "2.0.0"
+            })))
+            .mount(&mock_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/pkg-123/2.0.0/values"))
+            .respond_with(ResponseTemplate::new(200).set_body_string("replicaCount: 2\n"))
+            .mount(&mock_server)
+            .await;
+
+        let server = test_server(&mock_server.uri());
+        let result = handle_get_package_values(
+            &server,
+            GetPackageValuesParams {
+                kind: "helm".to_string(),
+                repo: "bitnami".to_string(),
+                name: "nginx".to_string(),
+                version: Some("2.0.0".to_string()),
+            },
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result.0.version, "2.0.0");
+        assert!(result.0.values.contains("replicaCount: 2"));
+    }
 }

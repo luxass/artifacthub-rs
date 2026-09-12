@@ -1,26 +1,19 @@
+//! Contract tests against [`artifacthub_server_mock::HubMockServer`], a faithful
+//! mock of `/tmp/hub` behavior — not hand-rolled subsets.
+//!
+//! HubMockServer serves full `get_package` payloads, structured changelogs, Trivy
+//! security maps, and hub content-types/headers. If the client drifts from
+//! hub wire format, these fail.
+
 use artifacthub_client::{ArtifactHubClient, ArtifactHubError};
-use wiremock::matchers::{header, method, path, query_param};
+use artifacthub_server_mock::HubMockServer;
+use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
-async fn search_builder_uses_artifact_hub_query_params() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/packages/search"))
-        .and(query_param("ts_query_web", "nginx"))
-        .and(query_param("kind", "0"))
-        .and(query_param("repo", "bitnami"))
-        .and(query_param("org", "vmware"))
-        .and(query_param("limit", "1"))
-        .and(query_param("offset", "2"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
-            "packages": [sample_package_summary_json()]
-        })))
-        .mount(&mock_server)
-        .await;
-
-    let client = ArtifactHubClient::with_base_url(mock_server.uri());
+async fn search_uses_hub_params_and_captures_total_count() {
+    let hub = HubMockServer::start().await;
+    let client = ArtifactHubClient::with_base_url(hub.uri());
     let response = client
         .packages()
         .search()
@@ -36,6 +29,7 @@ async fn search_builder_uses_artifact_hub_query_params() {
 
     assert_eq!(response.packages.len(), 1);
     assert_eq!(response.packages[0].package_id, "pkg-123");
+    assert_eq!(response.total_count, Some(1));
 }
 
 #[tokio::test]
@@ -44,14 +38,24 @@ async fn starred_builder_sends_pagination_and_auth_headers() {
 
     Mock::given(method("GET"))
         .and(path("/packages/starred"))
-        .and(query_param("limit", "1"))
-        .and(query_param("offset", "2"))
+        .and(wiremock::matchers::query_param("limit", "1"))
+        .and(wiremock::matchers::query_param("offset", "2"))
         .and(header("X-API-KEY-ID", "key-id"))
         .and(header("X-API-KEY-SECRET", "key-secret"))
-        .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(serde_json::json!([sample_package_summary_json()])),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "package_id": "pkg-123",
+                "name": "nginx",
+                "normalized_name": "nginx",
+                "version": "1.2.3",
+                "description": "Nginx chart",
+                "deprecated": false,
+                "signed": false,
+                "stars": 10,
+                "ts": 123,
+                "repository": {"name": "bitnami", "url": "https://charts.bitnami.com/bitnami"}
+            }
+        ])))
         .mount(&mock_server)
         .await;
 
@@ -72,27 +76,131 @@ async fn starred_builder_sends_pagination_and_auth_headers() {
 }
 
 #[tokio::test]
-async fn get_builder_sends_version_query_param() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/packages/helm/bitnami/nginx"))
-        .and(query_param("version", "1.2.3"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(sample_package_json()))
-        .mount(&mock_server)
-        .await;
-
-    let client = ArtifactHubClient::with_base_url(mock_server.uri());
+async fn get_pinned_version_returns_exact_snapshot() {
+    let hub = HubMockServer::start().await;
+    let client = ArtifactHubClient::with_base_url(hub.uri());
     let package = client
         .packages()
         .get("helm", "bitnami", "nginx")
-        .version("1.2.3")
+        .version("1.2.0")
         .send()
         .await
         .unwrap();
 
     assert_eq!(package.package_id, "pkg-123");
-    assert_eq!(package.version, "1.2.3");
+    assert_eq!(package.version, "1.2.0");
+    // Full payload parses (readme/available_versions siblings present).
+    assert!(!package.description.is_empty());
+}
+
+#[tokio::test]
+async fn get_latest_without_version() {
+    let hub = HubMockServer::start().await;
+    let client = ArtifactHubClient::with_base_url(hub.uri());
+    let package = client
+        .packages()
+        .get("helm", "bitnami", "nginx")
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(package.version, "1.3.0");
+}
+
+#[tokio::test]
+async fn get_rejects_version_mismatch() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/packages/helm/bitnami/nginx/1.2.3"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "package_id": "pkg-123",
+            "name": "nginx",
+            "normalized_name": "nginx",
+            "version": "9.9.9",
+            "description": "Nginx chart",
+            "deprecated": false,
+            "prerelease": false,
+            "signed": false,
+            "keywords": [],
+            "ts": 123,
+            "repository": {
+                "name": "bitnami",
+                "display_name": "Bitnami",
+                "url": "https://charts.bitnami.com/bitnami",
+                "kind": 0,
+                "verified_publisher": true,
+                "official": false
+            },
+            "stats": {"subscriptions": 0, "webhooks": 0},
+            "links": [],
+            "contains_security_updates": false
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let client = ArtifactHubClient::with_base_url(mock_server.uri());
+    let error = client
+        .packages()
+        .get("helm", "bitnami", "nginx")
+        .version("1.2.3")
+        .send()
+        .await
+        .unwrap_err();
+
+    assert!(
+        matches!(error, ArtifactHubError::VersionMismatch { .. }),
+        "expected VersionMismatch, got {error:?}"
+    );
+}
+
+#[tokio::test]
+async fn get_unknown_version_is_404_like_hub() {
+    let hub = HubMockServer::start().await;
+    let client = ArtifactHubClient::with_base_url(hub.uri());
+    let error = client
+        .packages()
+        .get("helm", "bitnami", "nginx")
+        .version("0.0.0-bogus")
+        .send()
+        .await
+        .unwrap_err();
+
+    assert!(
+        matches!(error, ArtifactHubError::Api { .. }),
+        "expected Api 404, got {error:?}"
+    );
+}
+
+#[tokio::test]
+async fn readme_pinned_version_returns_versioned_readme() {
+    let hub = HubMockServer::start().await;
+    let client = ArtifactHubClient::with_base_url(hub.uri());
+    let readme = client
+        .packages()
+        .readme("helm", "bitnami", "nginx")
+        .version("1.2.0")
+        .send()
+        .await
+        .unwrap();
+
+    assert!(readme.readme.contains("1.2.0"));
+}
+
+#[tokio::test]
+async fn helm_values_with_version_uses_version_path_for_identity() {
+    let hub = HubMockServer::start().await;
+    let client = ArtifactHubClient::with_base_url(hub.uri());
+    let values = client
+        .helm()
+        .values("helm", "bitnami", "nginx")
+        .version("1.2.0")
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(values.version, "1.2.0");
+    assert!(values.values.contains("replicaCount: 2"));
 }
 
 #[tokio::test]
@@ -116,23 +224,13 @@ async fn package_id_version_endpoints_use_encoded_paths() {
 }
 
 #[tokio::test]
-async fn stars_returns_count_shape() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/packages/pkg-123/stars"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
-            "stars": 150,
-            "starred_by_user": true
-        })))
-        .mount(&mock_server)
-        .await;
-
-    let client = ArtifactHubClient::with_base_url(mock_server.uri());
+async fn stars_anonymous_shape_has_no_starred_by_user() {
+    let hub = HubMockServer::start().await;
+    let client = ArtifactHubClient::with_base_url(hub.uri());
     let stats = client.packages().stars("pkg-123").await.unwrap();
 
     assert_eq!(stats.stars, 150);
-    assert_eq!(stats.starred_by_user, Some(true));
+    assert_eq!(stats.starred_by_user, None);
 }
 
 #[tokio::test]
@@ -160,90 +258,49 @@ async fn api_errors_use_json_message_when_present() {
 }
 
 #[tokio::test]
-async fn changelog_builder_resolves_package_then_uses_package_id_endpoint() {
-    let mock_server = MockServer::start().await;
+async fn changelog_fetches_full_list_and_filters_client_side() {
+    let hub = HubMockServer::start().await;
+    let client = ArtifactHubClient::with_base_url(hub.uri());
 
-    Mock::given(method("GET"))
-        .and(path("/packages/helm/bitnami/nginx"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
-            "package_id": "pkg-123",
-            "version": "1.2.3"
-        })))
-        .mount(&mock_server)
-        .await;
-
-    Mock::given(method("GET"))
-        .and(path("/packages/pkg-123/changelog"))
-        .and(query_param("from", "1.0.0"))
-        .and(query_param("to", "1.2.3"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
-            {
-                "version": "1.2.3",
-                "ts": 1700000000,
-                "changes": ["Fixed service ports"],
-                "prerelease": false
-            }
-        ])))
-        .mount(&mock_server)
-        .await;
-
-    let client = ArtifactHubClient::with_base_url(mock_server.uri());
-    let changelog = client
+    // No range: full structured list.
+    let full = client
         .packages()
         .changelog("helm", "bitnami", "nginx")
-        .from("1.0.0")
-        .to("1.2.3")
         .send()
         .await
         .unwrap();
+    assert_eq!(full.entries.len(), 3);
+    assert_eq!(full.entries[0].changes[0].description, "Added new feature");
 
-    assert_eq!(changelog.entries.len(), 1);
-    assert_eq!(changelog.entries[0].version, "1.2.3");
+    // Range is client-side (hub ignores ?from=&to=).
+    let ranged = client
+        .packages()
+        .changelog("helm", "bitnami", "nginx")
+        .from("1.1.0")
+        .to("1.2.0")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(ranged.entries.len(), 1);
+    assert_eq!(ranged.entries[0].version, "1.2.0");
 }
 
-fn sample_package_json() -> serde_json::Value {
-    serde_json::json!({
-        "package_id": "pkg-123",
-        "name": "nginx",
-        "normalized_name": "nginx",
-        "version": "1.2.3",
-        "description": "Nginx chart",
-        "deprecated": false,
-        "prerelease": false,
-        "signed": false,
-        "keywords": [],
-        "ts": 123,
-        "repository": {
-            "name": "bitnami",
-            "display_name": "Bitnami",
-            "url": "https://charts.bitnami.com/bitnami",
-            "kind": 0,
-            "verified_publisher": true,
-            "official": false
-        },
-        "stats": {
-            "subscriptions": 0,
-            "webhooks": 0
-        },
-        "links": [],
-        "contains_security_updates": false
-    })
-}
+#[tokio::test]
+async fn security_report_parses_trivy_map_shape() {
+    let hub = HubMockServer::start().await;
+    let client = ArtifactHubClient::with_base_url(hub.uri());
+    let report = client
+        .packages()
+        .security_report("pkg-123", "1.2.0")
+        .await
+        .unwrap()
+        .expect("report");
 
-fn sample_package_summary_json() -> serde_json::Value {
-    serde_json::json!({
-        "package_id": "pkg-123",
-        "name": "nginx",
-        "normalized_name": "nginx",
-        "version": "1.2.3",
-        "description": "Nginx chart",
-        "deprecated": false,
-        "signed": false,
-        "stars": 10,
-        "ts": 123,
-        "repository": {
-            "name": "bitnami",
-            "url": "https://charts.bitnami.com/bitnami"
-        }
-    })
+    let entry = report.0.get("quay.io/org/pkg1:1.2.0").expect("image entry");
+    assert_eq!(
+        entry.results[0].vulnerabilities[0]
+            .vulnerability_id
+            .as_deref(),
+        Some("CVE-2024-1234")
+    );
 }

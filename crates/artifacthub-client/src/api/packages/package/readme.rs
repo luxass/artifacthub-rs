@@ -1,4 +1,4 @@
-use crate::api::packages::{PackageReference, PackagesHandler, optional_query_params};
+use crate::api::packages::{PackageReference, PackagesHandler};
 use crate::client::ArtifactHubClient;
 use crate::error::{ArtifactHubError, Result};
 use crate::models::PackageReadme;
@@ -7,6 +7,7 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 struct PackageReadmeResponse {
     readme: Option<String>,
+    version: Option<String>,
 }
 
 impl<'client> PackagesHandler<'client> {
@@ -46,9 +47,18 @@ impl<'client> ReadmeBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<PackageReadme> {
-        let path = self.package.path("");
-        let query = optional_query_params([("version", self.version.as_deref())]);
-        let response: PackageReadmeResponse = self.client.get_json(&path, &query).await?;
+        let response: PackageReadmeResponse = self
+            .client
+            .get_json(&self.package.versioned_path(self.version.as_deref()), &[])
+            .await?;
+        // Same strictness as get.rs: a requested version must match, even if
+        // the server omits `version` (stripped null).
+        if self.version.is_some() {
+            PackageReference::ensure_version(
+                self.version.as_deref(),
+                response.version.as_deref().unwrap_or_default(),
+            )?;
+        }
         let readme = response
             .readme
             .ok_or_else(|| ArtifactHubError::missing_field("readme", "this package"))?;

@@ -74,9 +74,11 @@ dependencies = [
 name = "artifacthub-client"
 version = "0.0.5"
 dependencies = [
+ "artifacthub-server-mock",
  "base64 0.22.1",
  "reqwest",
  "schemars",
+ "semver",
  "serde",
  "serde_json",
  "thiserror",
@@ -89,6 +91,7 @@ name = "artifacthub-mcp"
 version = "0.2.7"
 dependencies = [
  "artifacthub-client",
+ "artifacthub-server-mock",
  "clap",
  "reqwest",
  "rmcp",
@@ -96,6 +99,14 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "wiremock",
+]
+
+[[package]]
+name = "artifacthub-server-mock"
+version = "0.0.0"
+dependencies = [
+ "serde_json",
  "wiremock",
 ]
 
@@ -1473,9 +1484,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.28"
+version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
+checksum = "56e6fa9c48d24d85fb3de5ad847117517440f6beceb7798af16b4a87d616b8d0"
 
 [[package]]
 name = "serde"

@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct SearchResponse {
     pub packages: Vec<SearchResult>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub total_count: Option<i32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

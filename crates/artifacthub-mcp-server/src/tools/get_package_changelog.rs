@@ -13,9 +13,9 @@ pub struct GetChangelogParams {
     pub repo: String,
     #[schemars(description = "Package name")]
     pub name: String,
-    #[schemars(description = "Target version (defaults to latest)")]
+    #[schemars(description = "Only include versions <= this (client-side filter, semver)")]
     pub to: Option<String>,
-    #[schemars(description = "Source version")]
+    #[schemars(description = "Only include versions > this (client-side filter, semver)")]
     pub from: Option<String>,
 }
 
@@ -80,13 +80,19 @@ mod tests {
                 {
                     "version": "1.3.0",
                     "ts": 1700000000,
-                    "changes": ["Added new feature", "Fixed bug"],
+                    "changes": [
+                        {"kind": "added", "description": "Added new feature"},
+                        {"kind": "fixed", "description": "Fixed bug"}
+                    ],
+                    "contains_security_updates": false,
                     "prerelease": false
                 },
                 {
                     "version": "1.2.0",
                     "ts": 1699000000,
-                    "changes": ["Initial release"]
+                    "changes": [{"description": "Initial release"}],
+                    "contains_security_updates": false,
+                    "prerelease": false
                 }
             ])))
             .mount(&mock_server)
@@ -109,5 +115,50 @@ mod tests {
         assert_eq!(result.0.entries.len(), 2);
         assert_eq!(result.0.entries[0].version, "1.3.0");
         assert_eq!(result.0.entries[0].changes.len(), 2);
+        assert_eq!(
+            result.0.entries[0].changes[0].description,
+            "Added new feature"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_get_package_changelog_filters_range_client_side() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/helm/bitnami/nginx"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
+                "version": "1.3.0"
+            })))
+            .mount(&mock_server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/pkg-123/changelog"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                {"version": "1.3.0", "ts": 1700000000, "changes": [], "contains_security_updates": false, "prerelease": false},
+                {"version": "1.2.0", "ts": 1699000000, "changes": [], "contains_security_updates": false, "prerelease": false},
+                {"version": "1.1.0", "ts": 1698000000, "changes": [], "contains_security_updates": false, "prerelease": false}
+            ])))
+            .mount(&mock_server)
+            .await;
+
+        let server = test_server(&mock_server.uri());
+        let result = handle_get_package_changelog(
+            &server,
+            GetChangelogParams {
+                kind: "helm".to_string(),
+                repo: "bitnami".to_string(),
+                name: "nginx".to_string(),
+                to: Some("1.2.0".to_string()),
+                from: Some("1.1.0".to_string()),
+            },
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result.0.entries.len(), 1);
+        assert_eq!(result.0.entries[0].version, "1.2.0");
     }
 }

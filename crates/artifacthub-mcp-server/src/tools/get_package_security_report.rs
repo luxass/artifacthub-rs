@@ -52,23 +52,24 @@ mod tests {
         Mock::given(method("GET"))
             .and(path("/packages/pkg-123/1.0.0/security-report"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "summary": {
-                    "critical": 1,
-                    "high": 2,
-                    "medium": 0,
-                    "low": 3,
-                    "unknown": 0
-                },
-                "critical_vulnerabilities": [
-                    {
-                        "vulnerability_id": "CVE-2024-1234",
-                        "package_name": "openssl",
-                        "package_version": "1.1.1",
-                        "severity": "critical",
-                        "fixed_version": "1.1.2",
-                        "title": "Critical vulnerability in OpenSSL"
-                    }
-                ]
+                "quay.io/org/pkg1:1.0.0": {
+                    "Results": [
+                        {
+                            "Target": "quay.io/org/pkg1:1.0.0",
+                            "Type": "alpine",
+                            "Vulnerabilities": [
+                                {
+                                    "VulnerabilityID": "CVE-2024-1234",
+                                    "PkgName": "openssl",
+                                    "InstalledVersion": "1.1.1",
+                                    "FixedVersion": "1.1.2",
+                                    "Severity": "CRITICAL",
+                                    "Title": "Critical vulnerability in OpenSSL"
+                                }
+                            ]
+                        }
+                    ]
+                }
             })))
             .mount(&mock_server)
             .await;
@@ -84,13 +85,19 @@ mod tests {
         .await
         .unwrap();
 
-        assert!(result.0.summary.is_some());
-        let summary = result.0.summary.unwrap();
-        assert_eq!(summary.critical, Some(1));
-        assert!(result.0.critical_vulnerabilities.is_some());
-        let vulns = result.0.critical_vulnerabilities.unwrap();
-        assert_eq!(vulns.len(), 1);
-        assert_eq!(vulns[0].vulnerability_id.as_deref(), Some("CVE-2024-1234"));
+        let entry = result
+            .0
+            .0
+            .get("quay.io/org/pkg1:1.0.0")
+            .expect("image entry");
+        assert_eq!(entry.results.len(), 1);
+        assert_eq!(entry.results[0].vulnerabilities.len(), 1);
+        assert_eq!(
+            entry.results[0].vulnerabilities[0]
+                .vulnerability_id
+                .as_deref(),
+            Some("CVE-2024-1234")
+        );
     }
 
     #[tokio::test]
@@ -114,7 +121,6 @@ mod tests {
         .await
         .unwrap();
 
-        assert!(result.0.summary.is_none());
-        assert!(result.0.critical_vulnerabilities.is_none());
+        assert!(result.0.0.is_empty());
     }
 }

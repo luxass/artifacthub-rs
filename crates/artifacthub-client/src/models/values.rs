@@ -62,6 +62,9 @@ where
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct StarStats {
+    // Upstream returns `{"starred_by_user":false}` with no `stars` for unknown
+    // IDs (get_package_stars.sql); default to 0 instead of failing parse.
+    #[serde(default)]
     pub stars: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub starred_by_user: Option<bool>,
