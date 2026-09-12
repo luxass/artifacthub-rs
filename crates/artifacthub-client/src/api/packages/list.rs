@@ -1,4 +1,4 @@
-use crate::api::packages::{PackagesHandler, optional_usize_query_params};
+use crate::api::packages::{PackagesHandler, QueryParams};
 use crate::client::ArtifactHubClient;
 use crate::error::Result;
 use crate::models::{PackageList, SearchResult};
@@ -44,12 +44,12 @@ impl<'client> StarredPackagesBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<PackageList> {
+        let mut q = QueryParams::new();
+        q.opt_usize("limit", self.limit);
+        q.opt_usize("offset", self.offset);
         let packages: Vec<SearchResult> = self
             .client
-            .get_json(
-                "/packages/starred",
-                &optional_usize_query_params([("limit", self.limit), ("offset", self.offset)]),
-            )
+            .get_json("/packages/starred", &q.finish())
             .await?;
 
         Ok(PackageList {

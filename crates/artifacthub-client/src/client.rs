@@ -122,6 +122,21 @@ impl ArtifactHubClient {
             .map(Some)
             .map_err(|e| ArtifactHubError::json("Failed to parse response", e))
     }
+
+    /// GET JSON plus `Pagination-Total-Count` header upstream sets on search
+    /// endpoints. Returns `(body, total_count)`.
+    pub(crate) async fn get_json_with_pagination<T>(
+        &self,
+        path: &str,
+        params: &[(String, String)],
+    ) -> Result<(T, Option<i32>)>
+    where
+        T: DeserializeOwned,
+    {
+        self.inner
+            .get_json_with_pagination(path, params, "Failed to parse response")
+            .await
+    }
 }
 
 impl Default for ArtifactHubClientBuilder {
@@ -220,6 +235,62 @@ impl ClientInner {
     {
         let body = self.get(path, params).await?;
         serde_json::from_str(&body).map_err(|e| ArtifactHubError::json(context, e))
+    }
+
+    pub(crate) async fn get_json_with_pagination<T>(
+        &self,
+        path: &str,
+        params: &[(String, String)],
+        context: &'static str,
+    ) -> Result<(T, Option<i32>)>
+    where
+        T: DeserializeOwned,
+    {
+        let (body, headers) = self.get_with_headers(path, params).await?;
+        let value = serde_json::from_str(&body).map_err(|e| ArtifactHubError::json(context, e))?;
+        let total_count = headers
+            .get("Pagination-Total-Count")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.parse().ok());
+        Ok((value, total_count))
+    }
+
+    async fn get_with_headers(
+        &self,
+        path: &str,
+        params: &[(String, String)],
+    ) -> Result<(String, reqwest::header::HeaderMap)> {
+        let mut req = self.client.get(self.full_url(path));
+        if let (Some(id), Some(secret)) = (&self.api_key_id, &self.api_key_secret) {
+            req = req
+                .header("X-API-KEY-ID", id)
+                .header("X-API-KEY-SECRET", secret);
+        }
+        if !params.is_empty() {
+            req = req.query(params);
+        }
+
+        let resp = req.send().await.map_err(ArtifactHubError::Request)?;
+        let status = resp.status();
+        let headers = resp.headers().clone();
+        let body = resp.text().await.map_err(ArtifactHubError::Body)?;
+
+        if !status.is_success() {
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&body)
+                && let Some(msg) = json.get("message").and_then(|m| m.as_str())
+            {
+                return Err(ArtifactHubError::Api {
+                    status,
+                    message: msg.to_string(),
+                });
+            }
+            return Err(ArtifactHubError::Api {
+                status,
+                message: body,
+            });
+        }
+
+        Ok((body, headers))
     }
 }
 

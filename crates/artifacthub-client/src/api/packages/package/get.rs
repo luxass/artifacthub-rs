@@ -1,4 +1,4 @@
-use crate::api::packages::{PackageReference, PackagesHandler, optional_query_params};
+use crate::api::packages::{PackageReference, PackagesHandler};
 use crate::client::ArtifactHubClient;
 use crate::error::Result;
 use crate::models::PackageSummary;
@@ -40,8 +40,11 @@ impl<'client> GetPackageBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<PackageSummary> {
-        let path = self.package.path("");
-        let query = optional_query_params([("version", self.version.as_deref())]);
-        self.client.get_json(&path, &query).await
+        let summary: PackageSummary = self
+            .client
+            .get_json(&self.package.versioned_path(self.version.as_deref()), &[])
+            .await?;
+        PackageReference::ensure_version(self.version.as_deref(), &summary.version)?;
+        Ok(summary)
     }
 }

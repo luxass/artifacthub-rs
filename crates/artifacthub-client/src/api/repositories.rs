@@ -1,3 +1,4 @@
+use crate::api::packages::QueryParams;
 use crate::client::ArtifactHubClient;
 use crate::error::Result;
 use crate::models::{SearchRepositoriesResponse, SearchRepositoryResult};
@@ -16,9 +17,10 @@ impl<'client> RepositoriesHandler<'client> {
         SearchRepositoriesBuilder {
             client: self.client,
             name: None,
-            kind: None,
-            user: None,
-            org: None,
+            url: None,
+            kinds: Vec::new(),
+            users: Vec::new(),
+            orgs: Vec::new(),
             limit: None,
             offset: None,
         }
@@ -28,9 +30,10 @@ impl<'client> RepositoriesHandler<'client> {
 pub struct SearchRepositoriesBuilder<'client> {
     client: &'client ArtifactHubClient,
     name: Option<String>,
-    kind: Option<String>,
-    user: Option<String>,
-    org: Option<String>,
+    url: Option<String>,
+    kinds: Vec<String>,
+    users: Vec<String>,
+    orgs: Vec<String>,
     limit: Option<usize>,
     offset: Option<usize>,
 }
@@ -41,18 +44,39 @@ impl<'client> SearchRepositoriesBuilder<'client> {
         self
     }
 
+    pub fn url(mut self, url: impl Into<String>) -> Self {
+        self.url = Some(url.into());
+        self
+    }
+
+    /// Append one kind id (repeatable for `?kind=0&kind=3`).
     pub fn kind(mut self, kind: impl Into<String>) -> Self {
-        self.kind = Some(kind.into());
+        self.kinds.push(kind.into());
+        self
+    }
+
+    pub fn kinds(mut self, kinds: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.kinds.extend(kinds.into_iter().map(Into::into));
         self
     }
 
     pub fn user(mut self, user: impl Into<String>) -> Self {
-        self.user = Some(user.into());
+        self.users.push(user.into());
+        self
+    }
+
+    pub fn users(mut self, users: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.users.extend(users.into_iter().map(Into::into));
         self
     }
 
     pub fn org(mut self, org: impl Into<String>) -> Self {
-        self.org = Some(org.into());
+        self.orgs.push(org.into());
+        self
+    }
+
+    pub fn orgs(mut self, orgs: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.orgs.extend(orgs.into_iter().map(Into::into));
         self
     }
 
@@ -67,34 +91,29 @@ impl<'client> SearchRepositoriesBuilder<'client> {
     }
 
     pub async fn send(self) -> Result<SearchRepositoriesResponse> {
-        let repositories: Vec<SearchRepositoryResult> = self
+        let (repositories, total_count) = self
             .client
-            .get_json("/repositories/search", &self.query_params())
+            .get_json_with_pagination::<Vec<SearchRepositoryResult>>(
+                "/repositories/search",
+                &self.query_params(),
+            )
             .await?;
 
-        Ok(SearchRepositoriesResponse { repositories })
+        Ok(SearchRepositoriesResponse {
+            repositories,
+            total_count,
+        })
     }
 
     fn query_params(&self) -> Vec<(String, String)> {
-        let mut query_params = Vec::new();
-        if let Some(name) = &self.name {
-            query_params.push(("name".to_string(), name.clone()));
-        }
-        if let Some(kind) = &self.kind {
-            query_params.push(("kind".to_string(), kind.clone()));
-        }
-        if let Some(user) = &self.user {
-            query_params.push(("user".to_string(), user.clone()));
-        }
-        if let Some(org) = &self.org {
-            query_params.push(("org".to_string(), org.clone()));
-        }
-        if let Some(limit) = self.limit {
-            query_params.push(("limit".to_string(), limit.to_string()));
-        }
-        if let Some(offset) = self.offset {
-            query_params.push(("offset".to_string(), offset.to_string()));
-        }
-        query_params
+        let mut q = QueryParams::new();
+        q.opt("name", self.name.as_deref());
+        q.opt("url", self.url.as_deref());
+        q.multi("kind", &self.kinds);
+        q.multi("user", &self.users);
+        q.multi("org", &self.orgs);
+        q.opt_usize("limit", self.limit);
+        q.opt_usize("offset", self.offset);
+        q.finish()
     }
 }
