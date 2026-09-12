@@ -78,6 +78,7 @@ dependencies = [
  "base64 0.22.1",
  "reqwest",
  "schemars",
+ "semver",
  "serde",
  "serde_json",
  "thiserror",

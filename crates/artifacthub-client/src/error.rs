@@ -26,6 +26,9 @@ pub enum ArtifactHubError {
         field: &'static str,
         context: &'static str,
     },
+    /// The API returned a different version than requested.
+    #[error("Version mismatch: requested {requested} but got {actual}")]
+    VersionMismatch { requested: String, actual: String },
 }
 
 /// Result type used by the Artifact Hub client.
@@ -38,6 +41,13 @@ impl ArtifactHubError {
 
     pub(crate) fn missing_field(field: &'static str, context: &'static str) -> Self {
         Self::MissingField { field, context }
+    }
+
+    pub(crate) fn version_mismatch(requested: &str, actual: &str) -> Self {
+        Self::VersionMismatch {
+            requested: requested.to_string(),
+            actual: actual.to_string(),
+        }
     }
 }
 

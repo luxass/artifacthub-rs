@@ -13,8 +13,8 @@ pub mod views;
 pub use changelog::{ChangelogBuilder, ChangelogByPackageIdBuilder, ChangelogMarkdownBuilder};
 pub use list::StarredPackagesBuilder;
 pub use package::{
-    GetPackageBuilder, GetPackageVersionBuilder, PackageStarStatsBuilder, PackageSummaryBuilder,
-    PackageVersionsBuilder, ProductionUsageBuilder, ReadmeBuilder,
+    GetPackageBuilder, PackageStarStatsBuilder, PackageSummaryBuilder, PackageVersionsBuilder,
+    ProductionUsageBuilder, ReadmeBuilder,
 };
 pub use search::SearchPackagesBuilder;
 
@@ -44,24 +44,46 @@ pub(crate) fn package_version_url(package_id: &str, version: &str, suffix: &str)
     )
 }
 
-pub(crate) fn version_suffix(version: &str) -> String {
-    format!("/{}", encode_path_segment(version))
-}
+/// Shared query-string collector. Handles single, repeated, bool, and usize
+/// params so search builders don't each reimplement the same ~30 lines.
+/// `Vec<(String, String)>` preserves duplicates for `?kind=0&kind=3`.
+#[derive(Default)]
+pub(crate) struct QueryParams(Vec<(String, String)>);
 
-pub(crate) fn optional_query_params<const N: usize>(
-    pairs: [(&str, Option<&str>); N],
-) -> Vec<(String, String)> {
-    pairs
-        .into_iter()
-        .filter_map(|(key, value)| value.map(|value| (key.to_string(), value.to_string())))
-        .collect()
-}
+impl QueryParams {
+    pub(crate) fn new() -> Self {
+        Self(Vec::new())
+    }
 
-pub(crate) fn optional_usize_query_params<const N: usize>(
-    pairs: [(&str, Option<usize>); N],
-) -> Vec<(String, String)> {
-    pairs
-        .into_iter()
-        .filter_map(|(key, value)| value.map(|value| (key.to_string(), value.to_string())))
-        .collect()
+    pub(crate) fn opt(&mut self, key: &str, value: Option<&str>) -> &mut Self {
+        if let Some(value) = value {
+            self.0.push((key.to_string(), value.to_string()));
+        }
+        self
+    }
+
+    pub(crate) fn opt_bool(&mut self, key: &str, value: Option<bool>) -> &mut Self {
+        if let Some(value) = value {
+            self.0.push((key.to_string(), value.to_string()));
+        }
+        self
+    }
+
+    pub(crate) fn opt_usize(&mut self, key: &str, value: Option<usize>) -> &mut Self {
+        if let Some(value) = value {
+            self.0.push((key.to_string(), value.to_string()));
+        }
+        self
+    }
+
+    pub(crate) fn multi(&mut self, key: &str, values: &[String]) -> &mut Self {
+        for value in values {
+            self.0.push((key.to_string(), value.clone()));
+        }
+        self
+    }
+
+    pub(crate) fn finish(self) -> Vec<(String, String)> {
+        self.0
+    }
 }
