@@ -41,6 +41,56 @@ pub struct PackageViews(pub BTreeMap<String, BTreeMap<String, i64>>);
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct PackageSummary {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_operator: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub official: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cncf: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub channels: Option<Vec<Channel>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_channel: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub crds: Option<Vec<ArtifactHubValue>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub crds_examples: Option<Vec<ArtifactHubValue>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capabilities: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub license: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub signatures: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub all_containers_images_whitelisted: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub has_values_schema: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub has_changelog: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub changes: Option<Vec<crate::models::ChangelogChange>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maintainers: Option<Vec<Maintainer>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recommendations: Option<Vec<Recommendation>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub screenshots: Option<Vec<Screenshot>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sign_key: Option<SignKey>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub production_organizations_count: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relative_path: Option<String>,
     #[serde(default)]
     pub package_id: String,
     #[serde(default)]
@@ -90,6 +140,14 @@ pub struct PackageSummary {
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct RepositoryInfo {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub repository_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branch: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub private: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub user_alias: Option<String>,
     #[serde(default)]
     pub name: String,
     #[serde(default)]
@@ -131,6 +189,8 @@ pub struct Link {
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct ContainerImage {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub platforms: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     pub image: String,
@@ -183,4 +243,47 @@ pub struct PackageReadme {
 #[cfg(feature = "schemars")]
 fn remove_format(schema: &mut schemars::Schema) {
     schema.remove("format");
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct Channel {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct Maintainer {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct Recommendation {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct Screenshot {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct SignKey {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fingerprint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
 }

@@ -30,6 +30,14 @@ pub struct SearchFacetOption {
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct SearchResult {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cncf: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub has_values_schema: Option<bool>,
     #[serde(default)]
     pub package_id: String,
     #[serde(default)]
@@ -71,6 +79,8 @@ pub struct SearchResult {
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct SearchRepositoryInfo {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branch: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub repository_id: Option<String>,
     #[serde(default)]

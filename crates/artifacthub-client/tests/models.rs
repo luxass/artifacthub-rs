@@ -1,6 +1,35 @@
 use artifacthub_client::models::{
-    ArtifactHubValue, ChartTemplate, ChartTemplates, SearchRepositoryResult, SearchResult,
+    ArtifactHubValue, ChartTemplate, ChartTemplates, PackageSummary, SearchRepositoryResult,
+    SearchResult,
 };
+
+#[test]
+fn package_metadata_preserves_hub_fields() {
+    let mut expected = artifacthub_server_mock::package_snapshot("1.3.0");
+    // These large fields have dedicated readme/versions operations.
+    expected.as_object_mut().unwrap().remove("readme");
+    expected
+        .as_object_mut()
+        .unwrap()
+        .remove("available_versions");
+    let package: PackageSummary = serde_json::from_value(expected.clone()).unwrap();
+
+    assert_eq!(serde_json::to_value(package).unwrap(), expected);
+}
+
+#[test]
+fn search_and_summary_preserve_helm_metadata() {
+    let expected = serde_json::json!({
+        "package_id": "pkg-123", "name": "chart", "normalized_name": "chart",
+        "version": "1.0.0", "description": "Chart", "deprecated": false,
+        "signed": true, "signatures": ["prov"], "stars": 10, "ts": 1700000000,
+        "display_name": "Chart", "category": 5, "cncf": true, "has_values_schema": true,
+        "repository": {"name": "repo", "url": "https://example.com", "branch": "main"}
+    });
+    let package: SearchResult = serde_json::from_value(expected.clone()).unwrap();
+
+    assert_eq!(serde_json::to_value(package).unwrap(), expected);
+}
 
 #[test]
 fn artifact_hub_value_preserves_large_integer_precision() {
