@@ -11,6 +11,40 @@ use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
+async fn search_preserves_requested_facets() {
+    let server = MockServer::start().await;
+    // search_packages.sql uses numeric IDs for kinds/categories and strings for licenses.
+    let facets = serde_json::json!([
+        {"title": "Kind", "filter_key": "kind", "options": [
+            {"id": 0, "name": "Helm", "total": 12}
+        ]},
+        {"title": "License", "filter_key": "license", "options": [
+            {"id": "Apache-2.0", "name": "Apache-2.0", "total": 10}
+        ]},
+        {"title": "Category", "filter_key": "category", "options": []}
+    ]);
+    Mock::given(method("GET"))
+        .and(path("/packages/search"))
+        .and(wiremock::matchers::query_param("facets", "true"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "packages": [], "facets": facets
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let response = ArtifactHubClient::with_base_url(server.uri())
+        .packages()
+        .search()
+        .facets(true)
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(serde_json::to_value(response).unwrap()["facets"], facets);
+}
+
+#[tokio::test]
 async fn search_uses_hub_params_and_captures_total_count() {
     let hub = HubMockServer::start().await;
     let client = ArtifactHubClient::with_base_url(hub.uri());

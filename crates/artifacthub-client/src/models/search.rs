@@ -4,8 +4,27 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct SearchResponse {
     pub packages: Vec<SearchResult>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub facets: Option<Vec<SearchFacet>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub total_count: Option<i32>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct SearchFacet {
+    pub title: String,
+    pub filter_key: String,
+    pub options: Vec<SearchFacetOption>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct SearchFacetOption {
+    /// Kind/category IDs are numbers; license/capability IDs are strings.
+    pub id: crate::models::ArtifactHubValue,
+    pub name: String,
+    pub total: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
