@@ -114,4 +114,35 @@ mod tests {
             Err(ref error) if error == "No readme found for this package"
         ));
     }
+
+    #[tokio::test]
+    async fn test_get_package_readme_with_version_uses_path() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/packages/helm/bitnami/nginx/14.0.0"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "package_id": "pkg-123",
+                "name": "nginx",
+                "version": "14.0.0",
+                "readme": "# Nginx 14.0.0"
+            })))
+            .mount(&mock_server)
+            .await;
+
+        let server = test_server(&mock_server.uri());
+        let result = handle_get_package_readme(
+            &server,
+            GetPackageReadmeParams {
+                kind: "helm".to_string(),
+                repo: "bitnami".to_string(),
+                name: "nginx".to_string(),
+                version: Some("14.0.0".to_string()),
+            },
+        )
+        .await
+        .unwrap();
+
+        assert!(result.0.readme.contains("14.0.0"));
+    }
 }

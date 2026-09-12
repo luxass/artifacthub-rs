@@ -1,20 +1,24 @@
 use artifacthub_client::models::SearchRepositoriesResponse;
 use rmcp::handler::server::wrapper::Json;
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 use crate::tools::ArtifactHubServer;
+use crate::tools::validation::{resolve_kind_ids, validate_limit};
 use artifacthub_client::kind::{self as pkg_kind};
 
-#[derive(Debug, serde::Deserialize, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct SearchRepositoriesParams {
-    #[schemars(description = "Search query string for repository name")]
+    #[schemars(description = "Search query string for repository name (regex upstream)")]
     pub name: Option<String>,
+    #[schemars(description = "Exact repository URL match")]
+    pub url: Option<String>,
     #[schemars(description = pkg_kind::KIND_DESCRIPTION)]
-    pub kind: Option<String>,
-    #[schemars(description = "Filter by user alias (repositories owned by user)")]
-    pub user: Option<String>,
-    #[schemars(description = "Filter by organization name")]
-    pub org: Option<String>,
+    pub kind: Option<Vec<String>>,
+    #[schemars(description = "Filter by user aliases (repeatable)")]
+    pub user: Option<Vec<String>>,
+    #[schemars(description = "Filter by organization names (repeatable)")]
+    pub org: Option<Vec<String>>,
     #[schemars(
         description = "Number of results (max 60)",
         transform = crate::tools::schema::remove_format
@@ -31,39 +35,25 @@ pub async fn handle_search_repositories(
     server: &ArtifactHubServer,
     params: SearchRepositoriesParams,
 ) -> Result<Json<SearchRepositoriesResponse>, String> {
-    if let Some(limit) = params.limit
-        && (limit == 0 || limit > 60)
-    {
-        return Err("limit must be between 1 and 60".to_string());
-    }
+    validate_limit(params.limit)?;
 
-    let kind = if let Some(kind) = &params.kind {
-        if let Some(id) = pkg_kind::to_id(kind) {
-            Some(id.to_string())
-        } else {
-            return Err(format!(
-                "Unknown kind: '{}'. Valid kinds: {}",
-                kind,
-                pkg_kind::valid_kinds().join(", ")
-            ));
-        }
-    } else {
-        None
-    };
-
+    let kind_ids = resolve_kind_ids(params.kind)?;
     let mut search = server.client.repositories().search();
 
     if let Some(name) = params.name {
         search = search.name(name);
     }
-    if let Some(kind) = kind {
-        search = search.kind(kind);
+    if let Some(url) = params.url {
+        search = search.url(url);
     }
-    if let Some(user) = params.user {
-        search = search.user(user);
+    if !kind_ids.is_empty() {
+        search = search.kinds(kind_ids);
     }
-    if let Some(org) = params.org {
-        search = search.org(org);
+    if let Some(users) = params.user {
+        search = search.users(users);
+    }
+    if let Some(orgs) = params.org {
+        search = search.orgs(orgs);
     }
     if let Some(limit) = params.limit {
         search = search.limit(limit);
@@ -114,8 +104,7 @@ mod tests {
                     "kind": 0,
                     "verified_publisher": true,
                     "official": true,
-                    "cncf": false,
-                    "package_count": 500
+                    "cncf": false
                 }
             ])))
             .mount(&mock_server)
@@ -126,7 +115,8 @@ mod tests {
             &server,
             SearchRepositoriesParams {
                 name: Some("bitnami".to_string()),
-                kind: Some("helm".to_string()),
+                url: None,
+                kind: Some(vec!["helm".to_string()]),
                 user: None,
                 org: None,
                 limit: Some(10),
@@ -166,9 +156,10 @@ mod tests {
             &server,
             SearchRepositoriesParams {
                 name: None,
+                url: None,
                 kind: None,
                 user: None,
-                org: Some("kvalitetsit".to_string()),
+                org: Some(vec!["kvalitetsit".to_string()]),
                 limit: None,
                 offset: None,
             },
@@ -177,11 +168,43 @@ mod tests {
         .unwrap();
 
         assert_eq!(result.0.repositories.len(), 1);
-        // Must serialize even when false, or rmcp output-schema validation (-32602) fails.
         let value = serde_json::to_value(&result.0).unwrap();
         let repo = &value["repositories"][0];
         assert_eq!(repo["official"], serde_json::Value::Bool(false));
         assert_eq!(repo["verified_publisher"], serde_json::Value::Bool(false));
+    }
+
+    #[tokio::test]
+    async fn test_search_repositories_captures_total_count_header() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/repositories/search"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(serde_json::json!([]))
+                    .insert_header("Pagination-Total-Count", "7"),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let server = test_server(&mock_server.uri());
+        let result = handle_search_repositories(
+            &server,
+            SearchRepositoriesParams {
+                name: None,
+                url: None,
+                kind: None,
+                user: None,
+                org: None,
+                limit: None,
+                offset: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result.0.total_count, Some(7));
     }
 
     #[tokio::test]
@@ -191,7 +214,8 @@ mod tests {
             &server,
             SearchRepositoriesParams {
                 name: None,
-                kind: Some("invalid".to_string()),
+                url: None,
+                kind: Some(vec!["invalid".to_string()]),
                 user: None,
                 org: None,
                 limit: None,
@@ -214,6 +238,7 @@ mod tests {
             &server,
             SearchRepositoriesParams {
                 name: None,
+                url: None,
                 kind: None,
                 user: None,
                 org: None,
