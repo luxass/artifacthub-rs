@@ -70,11 +70,11 @@ def main():
         print(f"{'ok  ' if ok else 'FAIL'} {name} {desc} {detail}")
 
     run("get_server_info", {})
-    run("search_packages", {"q": "nginx", "kind": "helm", "limit": 5}, "[happy]")
-    run("search_packages", {"org": "kvalitetsit", "kind": "helm", "limit": 60}, "[edge]")
+    run("search_packages", {"q": "nginx", "kind": ["helm"], "limit": 5}, "[happy]")
+    run("search_packages", {"org": ["kvalitetsit"], "kind": ["helm"], "limit": 60}, "[edge]")
 
     # Chain: pick a kvalitetsit package for per-package tools
-    resp = m.call("search_packages", {"org": "kvalitetsit", "kind": "helm", "limit": 5})
+    resp = m.call("search_packages", {"org": ["kvalitetsit"], "kind": ["helm"], "limit": 5})
     chain = resp.get("result", {}).get("structuredContent")
     if chain is None:
         print(f"FAIL search_packages [chain] {json.dumps(resp)[:300]} - cannot continue")
@@ -152,9 +152,9 @@ def main():
         run("get_package_template_data",
             {"package_id": pid2, "version": ver2, "name": tname}, f"[nginx {tname}]")
 
-    run("search_repositories", {"name": "bitnami", "kind": "helm", "limit": 5}, "[happy]")
+    run("search_repositories", {"name": "bitnami", "kind": ["helm"], "limit": 5}, "[happy]")
     run("search_repositories",
-        {"org": "kvalitetsit", "kind": "helm", "limit": 60}, "[edge]")
+        {"org": ["kvalitetsit"], "kind": ["helm"], "limit": 60}, "[edge]")
 
     m.close()
     fails = [r for r in results if not r[2]]
