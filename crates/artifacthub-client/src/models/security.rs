@@ -15,8 +15,15 @@ pub struct SecurityReport(pub HashMap<String, ImageReport>);
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct ImageReport {
-    #[serde(default, rename = "Results")]
+    #[serde(
+        default,
+        rename = "Results",
+        deserialize_with = "deserialize_null_default"
+    )]
     pub results: Vec<ScanResult>,
+    /// Trivy metadata is returned unchanged by Artifact Hub.
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, serde_json::Value>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -32,6 +39,8 @@ pub struct ScanResult {
         deserialize_with = "deserialize_null_default"
     )]
     pub vulnerabilities: Vec<Vulnerability>,
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, serde_json::Value>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -61,4 +70,6 @@ pub struct Vulnerability {
     pub severity: Option<String>,
     #[serde(default, rename = "Title", skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, serde_json::Value>,
 }
