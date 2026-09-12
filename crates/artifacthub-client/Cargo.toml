@@ -21,3 +21,4 @@ schemars = ["dep:schemars"]
 [dev-dependencies]
 wiremock = { workspace = true }
 tokio = { workspace = true }
+artifacthub-server-mock = { workspace = true }
