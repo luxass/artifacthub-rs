@@ -96,8 +96,9 @@ def main():
     run("get_package_readme", triple, "[edge-pkg]")
     run("get_package_versions", dict(triple, limit=3), "[edge-pkg]")
     run("get_package_changelog", triple, "[edge-pkg]")
+    # The Hub chart publishes structured changes; bitnami/nginx currently does not.
     run("get_changelog_md",
-        {"kind": "helm", "repo": "bitnami", "name": "nginx"}, "[happy]")
+        {"kind": "helm", "repo": "artifact-hub", "name": "artifact-hub"}, "[happy]")
     # Edge package may genuinely have no changelog file upstream (404).
     # That is correct tool behavior, not a bug: count it as ok, loudly.
     md_resp = m.call("get_changelog_md", triple)
