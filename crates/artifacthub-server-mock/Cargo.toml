@@ -1,0 +1,12 @@
+[package]
+name = "artifacthub-server-mock"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Internal faithful mock of the Artifact Hub API for tests. Not published."
+publish = false
+
+[dependencies]
+wiremock = { workspace = true }
+serde_json = { workspace = true }
