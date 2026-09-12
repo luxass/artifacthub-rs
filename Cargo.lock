@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "artifacthub-client"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "artifacthub-server-mock",
  "base64 0.22.1",
@@ -88,7 +88,7 @@ dependencies = [
 
 [[package]]
 name = "artifacthub-mcp"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
  "artifacthub-client",
  "artifacthub-server-mock",
