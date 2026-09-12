@@ -1,5 +1,5 @@
 use artifacthub_client::models::{
-    ArtifactHubValue, ChartTemplate, SearchRepositoryResult, SearchResult,
+    ArtifactHubValue, ChartTemplate, ChartTemplates, SearchRepositoryResult, SearchResult,
 };
 
 #[test]
@@ -8,6 +8,19 @@ fn artifact_hub_value_preserves_large_integer_precision() {
         serde_json::from_str(r#"9007199254740993"#).expect("valid JSON number");
 
     assert_eq!(value.0.to_string(), "9007199254740993");
+}
+
+#[test]
+fn chart_without_templates_returns_an_empty_collection() {
+    // GetChartTemplates marshals Helm's nil slice as null for dependency-only charts.
+    let response: ChartTemplates = serde_json::from_value(serde_json::json!({
+        "templates": null,
+        "values": {"dependency": {"enabled": true}}
+    }))
+    .unwrap();
+
+    assert!(response.templates.is_empty());
+    assert_eq!(response.values.unwrap().0["dependency"]["enabled"], true);
 }
 
 #[test]

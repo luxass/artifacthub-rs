@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+use super::json::deserialize_null_default;
+
 /// Security report as stored by Artifact Hub: map of image reference to its
 /// Trivy scan report. Upstream column holds only `images_reports`
 /// (`update_snapshot_security_report.sql`), never a grouped
@@ -59,13 +61,4 @@ pub struct Vulnerability {
     pub severity: Option<String>,
     #[serde(default, rename = "Title", skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-}
-
-fn deserialize_null_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
-where
-    D: serde::Deserializer<'de>,
-    T: Default + serde::Deserialize<'de>,
-{
-    let opt = Option::deserialize(deserializer)?;
-    Ok(opt.unwrap_or_default())
 }
