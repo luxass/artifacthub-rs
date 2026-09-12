@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.9](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.8...artifacthub-mcp@0.2.9) - 2026-09-12
+
+### 🐛 Bug Fixes
+
+- preserve Helm read data and repair conformance checks ([#30](https://github.com/luxass/artifacthub-rs/pull/30)) (by @luxass)
+- align mcp server tools with hub behavior ([#25](https://github.com/luxass/artifacthub-rs/pull/25)) (by @luxass)
+- align artifacthub-client with hub server behavior ([#27](https://github.com/luxass/artifacthub-rs/pull/27)) (by @luxass)
+
+### 🧪 Testing
+
+- prove mock catches client drift (expected red) ([#24](https://github.com/luxass/artifacthub-rs/pull/24)) (by @luxass)
+
+### Contributors
+
+* @luxass
+
 ## [0.2.8](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.7...artifacthub-mcp@0.2.8) - 2026-09-06
 
 ### 🐛 Bug Fixes
