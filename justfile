@@ -11,6 +11,10 @@ check:
 test:
   cargo test --locked
 
+# Test the live sweep's comparison logic without network access
+sweep-test:
+  python3 -B -m unittest discover -s "{{justfile_directory()}}/scripts" -p "test_*.py"
+
 # Run e2e tests against real Artifact Hub API
 e2e:
   cargo test --locked --features e2e --test e2e -- --include-ignored
