@@ -40,6 +40,10 @@ pub struct SearchParams {
     #[schemars(description = "Sort: relevance|stars|last_updated")]
     pub sort: Option<String>,
     #[schemars(
+        description = "Include counts grouped by kind, category, license, and capabilities"
+    )]
+    pub facets: Option<bool>,
+    #[schemars(
         description = "Number of results (max 60)",
         transform = crate::tools::schema::remove_format
     )]
@@ -105,6 +109,9 @@ pub async fn handle_search_packages(
     if let Some(sort) = params.sort {
         search = search.sort(sort);
     }
+    if let Some(facets) = params.facets {
+        search = search.facets(facets);
+    }
     if let Some(limit) = params.limit {
         search = search.limit(limit);
     }
@@ -134,6 +141,35 @@ mod tests {
                 .map(|s| s.to_string())
                 .collect::<HashSet<_>>(),
         }
+    }
+
+    #[tokio::test]
+    async fn test_search_packages_returns_requested_facets() {
+        let mock_server = MockServer::start().await;
+        let facets = serde_json::json!([{
+            "title": "Kind", "filter_key": "kind",
+            "options": [{"id": 0, "name": "Helm", "total": 12}]
+        }]);
+        Mock::given(method("GET"))
+            .and(path("/packages/search"))
+            .and(query_param("facets", "true"))
+            .and(query_param("kind", "0"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "packages": [], "facets": facets
+            })))
+            .expect(1)
+            .mount(&mock_server)
+            .await;
+
+        let params = serde_json::from_value(serde_json::json!({
+            "kind": ["helm"], "facets": true
+        }))
+        .unwrap();
+        let result = handle_search_packages(&test_server(&mock_server.uri()), params)
+            .await
+            .unwrap();
+
+        assert_eq!(serde_json::to_value(result.0).unwrap()["facets"], facets);
     }
 
     #[tokio::test]
@@ -187,6 +223,7 @@ mod tests {
                 license: None,
                 capabilities: None,
                 sort: None,
+                facets: None,
                 limit: Some(10),
                 offset: None,
             },
@@ -234,6 +271,7 @@ mod tests {
                 license: None,
                 capabilities: None,
                 sort: Some("stars".to_string()),
+                facets: None,
                 limit: None,
                 offset: None,
             },
@@ -277,6 +315,7 @@ mod tests {
                 license: None,
                 capabilities: None,
                 sort: None,
+                facets: None,
                 limit: None,
                 offset: None,
             },
@@ -308,6 +347,7 @@ mod tests {
                 license: None,
                 capabilities: None,
                 sort: None,
+                facets: None,
                 limit: None,
                 offset: None,
             },
@@ -343,6 +383,7 @@ mod tests {
                 license: None,
                 capabilities: None,
                 sort: None,
+                facets: None,
                 limit: Some(61),
                 offset: None,
             },
@@ -377,6 +418,7 @@ mod tests {
                 license: None,
                 capabilities: None,
                 sort: None,
+                facets: None,
                 limit: Some(0),
                 offset: None,
             },
