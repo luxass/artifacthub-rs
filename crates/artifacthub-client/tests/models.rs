@@ -1,6 +1,69 @@
 use artifacthub_client::models::{
-    ArtifactHubValue, ChartTemplate, SearchRepositoryResult, SearchResult,
+    ArtifactHubValue, ChartTemplate, ChartTemplates, PackageSummary, SearchRepositoryResult,
+    SearchResult,
 };
+
+#[test]
+fn package_metadata_preserves_hub_fields() {
+    let mut expected = artifacthub_server_mock::package_snapshot("1.3.0");
+    // These large fields have dedicated readme/versions operations.
+    expected.as_object_mut().unwrap().remove("readme");
+    expected
+        .as_object_mut()
+        .unwrap()
+        .remove("available_versions");
+    let package: PackageSummary = serde_json::from_value(expected.clone()).unwrap();
+
+    assert_eq!(serde_json::to_value(package).unwrap(), expected);
+}
+
+#[test]
+fn search_and_summary_preserve_helm_metadata() {
+    let expected = serde_json::json!({
+        "package_id": "pkg-123", "name": "chart", "normalized_name": "chart",
+        "version": "1.0.0", "description": "Chart", "deprecated": false,
+        "signed": true, "signatures": ["prov"], "stars": 10, "ts": 1700000000,
+        "display_name": "Chart", "category": 5, "cncf": true, "has_values_schema": true,
+        "repository": {"name": "repo", "url": "https://example.com", "branch": "main"}
+    });
+    let package: SearchResult = serde_json::from_value(expected.clone()).unwrap();
+
+    assert_eq!(serde_json::to_value(package).unwrap(), expected);
+}
+
+#[test]
+fn security_reports_preserve_trivy_details() {
+    let expected = serde_json::json!({
+        "nginx:1.31.0": {
+            "SchemaVersion": 2,
+            "ArtifactName": "nginx:1.31.0",
+            "Metadata": {"OS": {"Family": "debian", "Name": "12"}},
+            "Results": [{
+                "Target": "nginx:1.31.0 (debian 12)", "Type": "debian", "Class": "os-pkgs",
+                "Vulnerabilities": [{
+                    "VulnerabilityID": "CVE-2025-0001", "PkgName": "example",
+                    "InstalledVersion": "1.0", "FixedVersion": "1.1", "Severity": "HIGH",
+                    "Title": "Example issue", "Description": "Detailed upstream explanation",
+                    "PrimaryURL": "https://example.com/advisory",
+                    "References": ["https://example.com/fix"],
+                    "CVSS": {"nvd": {"V3Score": 7.5}},
+                    "PublishedDate": "2025-01-01T00:00:00Z"
+                }]
+            }]
+        }
+    });
+    let report: artifacthub_client::models::SecurityReport =
+        serde_json::from_value(expected.clone()).unwrap();
+
+    assert_eq!(serde_json::to_value(report).unwrap(), expected);
+}
+
+#[test]
+fn security_report_accepts_null_results() {
+    let report: artifacthub_client::models::SecurityReport =
+        serde_json::from_value(serde_json::json!({"image": {"Results": null}})).unwrap();
+    assert!(report.0["image"].results.is_empty());
+}
 
 #[test]
 fn artifact_hub_value_preserves_large_integer_precision() {
@@ -8,6 +71,19 @@ fn artifact_hub_value_preserves_large_integer_precision() {
         serde_json::from_str(r#"9007199254740993"#).expect("valid JSON number");
 
     assert_eq!(value.0.to_string(), "9007199254740993");
+}
+
+#[test]
+fn chart_without_templates_returns_an_empty_collection() {
+    // GetChartTemplates marshals Helm's nil slice as null for dependency-only charts.
+    let response: ChartTemplates = serde_json::from_value(serde_json::json!({
+        "templates": null,
+        "values": {"dependency": {"enabled": true}}
+    }))
+    .unwrap();
+
+    assert!(response.templates.is_empty());
+    assert_eq!(response.values.unwrap().0["dependency"]["enabled"], true);
 }
 
 #[test]

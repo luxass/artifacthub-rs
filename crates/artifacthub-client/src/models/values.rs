@@ -1,6 +1,7 @@
 use base64::Engine;
 use serde::{Deserialize, Deserializer, Serialize};
 
+use super::json::deserialize_null_default;
 use crate::models::{ArtifactHubValue, ValuesSchemaDocument};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -21,6 +22,7 @@ pub struct ValuesSchema {
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct ChartTemplates {
+    #[serde(deserialize_with = "deserialize_null_default")]
     pub templates: Vec<ChartTemplate>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub values: Option<ArtifactHubValue>,

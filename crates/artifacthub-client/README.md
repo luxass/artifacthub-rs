@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Values:\n{}", values.values);
 
-    // Get star history
+    // Get star count
     let stats = client
         .stats()
         .star_stats("helm", "bitnami", "nginx")
@@ -77,12 +77,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     if let Some(report) = report {
-        println!("Security report: {:?}", report.summary);
+        println!("Security report: {:?}", report.0);
     }
 
     Ok(())
 }
 ```
+
+Package metadata includes license, maintainers, signing details, repository
+identity, and container platforms. Fetch README text and version lists with
+`.packages().readme(...)` and `.packages().versions(...)`.
+
+Use `.packages().search().facets(true)` to request Hub's facet groups and counts.
+Security reports retain Trivy's additional fields, including CVSS scores and
+references, in the `extra` maps on reports, scan results, and vulnerabilities.
 
 ## License
 

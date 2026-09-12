@@ -11,6 +11,40 @@ use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
+async fn search_preserves_requested_facets() {
+    let server = MockServer::start().await;
+    // search_packages.sql uses numeric IDs for kinds/categories and strings for licenses.
+    let facets = serde_json::json!([
+        {"title": "Kind", "filter_key": "kind", "options": [
+            {"id": 0, "name": "Helm", "total": 12}
+        ]},
+        {"title": "License", "filter_key": "license", "options": [
+            {"id": "Apache-2.0", "name": "Apache-2.0", "total": 10}
+        ]},
+        {"title": "Category", "filter_key": "category", "options": []}
+    ]);
+    Mock::given(method("GET"))
+        .and(path("/packages/search"))
+        .and(wiremock::matchers::query_param("facets", "true"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "packages": [], "facets": facets
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let response = ArtifactHubClient::with_base_url(server.uri())
+        .packages()
+        .search()
+        .facets(true)
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(serde_json::to_value(response).unwrap()["facets"], facets);
+}
+
+#[tokio::test]
 async fn search_uses_hub_params_and_captures_total_count() {
     let hub = HubMockServer::start().await;
     let client = ArtifactHubClient::with_base_url(hub.uri());
@@ -19,6 +53,7 @@ async fn search_uses_hub_params_and_captures_total_count() {
         .search()
         .query("nginx")
         .kind("0")
+        .kind("3")
         .repo("bitnami")
         .org("vmware")
         .limit(1)
@@ -30,6 +65,26 @@ async fn search_uses_hub_params_and_captures_total_count() {
     assert_eq!(response.packages.len(), 1);
     assert_eq!(response.packages[0].package_id, "pkg-123");
     assert_eq!(response.total_count, Some(1));
+
+    let requests = hub.received_requests().await;
+    assert_eq!(requests.len(), 1);
+    let query: Vec<_> = requests[0].url.query_pairs().collect();
+    let expected = [
+        ("ts_query_web", "nginx"),
+        ("kind", "0"),
+        ("kind", "3"),
+        ("repo", "bitnami"),
+        ("org", "vmware"),
+        ("limit", "1"),
+        ("offset", "2"),
+    ];
+    assert_eq!(query.len(), expected.len());
+    for (key, value) in expected {
+        assert!(
+            query.contains(&(key.into(), value.into())),
+            "missing {key}={value}"
+        );
+    }
 }
 
 #[tokio::test]

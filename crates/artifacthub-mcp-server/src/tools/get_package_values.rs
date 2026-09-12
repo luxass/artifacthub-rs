@@ -128,22 +128,27 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_package_values_with_version_uses_path() {
+    async fn test_get_package_values_pins_oci_chart_and_preserves_yaml() {
         let mock_server = MockServer::start().await;
+        let yaml = "# Keep comments and quoted scalars\nreplicaCount: 2\ntag: '001'\nscript: |\n  echo hello\n\n";
 
         Mock::given(method("GET"))
             .and(path("/packages/helm/bitnami/nginx/2.0.0"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
                 "package_id": "pkg-123",
                 "name": "nginx",
-                "version": "2.0.0"
+                "version": "2.0.0",
+                "content_url": "oci://registry.example.com/charts/nginx:2.0.0",
+                "repository": {"url": "oci://registry.example.com/charts"}
             })))
+            .expect(1)
             .mount(&mock_server)
             .await;
 
         Mock::given(method("GET"))
             .and(path("/packages/pkg-123/2.0.0/values"))
-            .respond_with(ResponseTemplate::new(200).set_body_string("replicaCount: 2\n"))
+            .respond_with(ResponseTemplate::new(200).set_body_string(yaml))
+            .expect(1)
             .mount(&mock_server)
             .await;
 
@@ -161,6 +166,7 @@ mod tests {
         .unwrap();
 
         assert_eq!(result.0.version, "2.0.0");
-        assert!(result.0.values.contains("replicaCount: 2"));
+        assert_eq!(result.0.package, "nginx");
+        assert_eq!(result.0.values, yaml);
     }
 }

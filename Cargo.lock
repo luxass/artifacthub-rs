@@ -91,6 +91,7 @@ name = "artifacthub-mcp"
 version = "0.2.8"
 dependencies = [
  "artifacthub-client",
+ "artifacthub-server-mock",
  "clap",
  "reqwest",
  "rmcp",

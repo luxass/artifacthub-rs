@@ -150,7 +150,7 @@ fn e2e_stdio_search_packages() {
         "search_packages",
         serde_json::json!({
             "q": "nginx",
-            "kind": "helm",
+            "kind": ["helm"],
             "limit": 5
         }),
     );
@@ -274,7 +274,7 @@ fn e2e_stdio_search_repositories() {
         "search_repositories",
         serde_json::json!({
             "name": "bitnami",
-            "kind": "helm",
+            "kind": ["helm"],
             "limit": 5
         }),
     );

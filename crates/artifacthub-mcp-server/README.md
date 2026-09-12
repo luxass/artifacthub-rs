@@ -146,6 +146,14 @@ For manual installation, add to your User Settings (JSON):
 | `search_packages` | Search for packages by query, kind, repo, or org |
 | `search_repositories` | Search repositories by name, kind, user, or org |
 
+Search filters such as `kind`, `repo`, and `org` take arrays. For example:
+
+```json
+{"q": "nginx", "kind": ["helm"], "facets": true, "limit": 5}
+```
+
+Set `facets` to `true` to include Hub's grouped counts in `search_packages` results.
+
 ### Package Details
 
 | Tool | Description |
@@ -189,7 +197,8 @@ Once connected, ask your assistant things like:
 
 ## Supported Package Kinds
 
-helm, falco, opa, olm, tekton, krew, helm-plugin, gatekeeper, keptn, tinkerbell, cni, contour, keda, coredns, operator, kubewarden, inspektor-gadget, kubearmor, backstage, headlamp, kpt, kubeescape, argo-template, helm-oci
+Helm charts, including charts hosted in OCI registries, use `helm`.
+See the [kind mappings](../artifacthub-client/src/kind.rs) for all supported kinds and aliases.
 
 ## Contributing
 
