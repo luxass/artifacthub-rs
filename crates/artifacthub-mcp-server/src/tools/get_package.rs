@@ -40,8 +40,9 @@ mod tests {
     use super::*;
     use crate::tools::ALL_TOOL_NAMES;
     use artifacthub_client::client::ArtifactHubClient;
+    use artifacthub_server_mock::{HubMockServer, package_snapshot};
     use std::collections::HashSet;
-    use wiremock::matchers::{method, path, query_param};
+    use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     fn test_server(base_url: &str) -> ArtifactHubServer {
@@ -54,47 +55,10 @@ mod tests {
         }
     }
 
-    fn sample_package_json() -> serde_json::Value {
-        serde_json::json!({
-            "package_id": "pkg-123",
-            "name": "nginx",
-            "normalized_name": "nginx",
-            "version": "15.0.0",
-            "description": "A Helm chart for nginx",
-            "deprecated": false,
-            "prerelease": false,
-            "signed": true,
-            "keywords": ["nginx", "http", "web"],
-            "ts": 1700000000,
-            "repository": {
-                "name": "bitnami",
-                "display_name": "Bitnami",
-                "url": "https://charts.bitnami.com/bitnami",
-                "kind": 0,
-                "verified_publisher": true,
-                "official": true,
-                "cncf": false
-            },
-            "stats": {
-                "subscriptions": 100,
-                "webhooks": 5
-            },
-            "links": [],
-            "contains_security_updates": false
-        })
-    }
-
     #[tokio::test]
     async fn test_get_package_returns_summary() {
-        let mock_server = MockServer::start().await;
-
-        Mock::given(method("GET"))
-            .and(path("/packages/helm/bitnami/nginx"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(sample_package_json()))
-            .mount(&mock_server)
-            .await;
-
-        let server = test_server(&mock_server.uri());
+        let hub = HubMockServer::start().await;
+        let server = test_server(&hub.uri());
         let result = handle_get_package(
             &server,
             GetPackageParams {
@@ -108,18 +72,38 @@ mod tests {
         .unwrap();
 
         assert_eq!(result.0.name, "nginx");
-        assert_eq!(result.0.version, "15.0.0");
+        assert_eq!(result.0.version, "1.3.0");
         assert_eq!(result.0.repository.name, "bitnami");
     }
 
     #[tokio::test]
     async fn test_get_package_with_version() {
+        let hub = HubMockServer::start().await;
+        let server = test_server(&hub.uri());
+        let result = handle_get_package(
+            &server,
+            GetPackageParams {
+                kind: "helm".to_string(),
+                repo: "bitnami".to_string(),
+                name: "nginx".to_string(),
+                version: Some("1.2.0".to_string()),
+            },
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result.0.name, "nginx");
+        assert_eq!(result.0.version, "1.2.0");
+    }
+
+    #[tokio::test]
+    async fn test_get_package_with_version_mismatch_errors() {
         let mock_server = MockServer::start().await;
 
+        // Simulates a proxy returning latest instead of the requested version.
         Mock::given(method("GET"))
-            .and(path("/packages/helm/bitnami/nginx"))
-            .and(query_param("version", "14.0.0"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(sample_package_json()))
+            .and(path("/packages/helm/bitnami/nginx/1.2.0"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(package_snapshot("1.3.0")))
             .mount(&mock_server)
             .await;
 
@@ -130,19 +114,21 @@ mod tests {
                 kind: "helm".to_string(),
                 repo: "bitnami".to_string(),
                 name: "nginx".to_string(),
-                version: Some("14.0.0".to_string()),
+                version: Some("1.2.0".to_string()),
             },
         )
-        .await
-        .unwrap();
+        .await;
 
-        assert_eq!(result.0.name, "nginx");
+        let Err(err) = result else {
+            panic!("expected version mismatch error");
+        };
+        assert!(err.contains("1.2.0"));
     }
 
     #[tokio::test]
     async fn test_get_package_defaults_missing_keywords() {
         let mock_server = MockServer::start().await;
-        let mut body = sample_package_json();
+        let mut body = package_snapshot("1.3.0");
         body.as_object_mut().unwrap().remove("keywords");
 
         Mock::given(method("GET"))

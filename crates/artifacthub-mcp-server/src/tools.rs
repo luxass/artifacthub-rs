@@ -14,6 +14,7 @@ pub mod get_server_info;
 pub mod schema;
 pub mod search_packages;
 pub mod search_repositories;
+pub mod validation;
 
 use std::collections::HashSet;
 
@@ -167,7 +168,7 @@ impl ArtifactHubServer {
     }
 
     #[tool(
-        description = "Get the default values.yaml for a Helm chart",
+        description = "Get the default values.yaml for a Helm chart (helm/kagent only upstream; other kinds return 400)",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     async fn get_package_values(
@@ -209,7 +210,7 @@ impl ArtifactHubServer {
     }
 
     #[tool(
-        description = "Get detailed security report with CVEs for a package. Requires package_id and version from get_package.",
+        description = "Get Trivy security report map (image -> Results with Vulnerabilities) for a package snapshot. Empty map means no report. Requires package_id and version from get_package.",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     async fn get_package_security_report(
@@ -237,7 +238,7 @@ impl ArtifactHubServer {
     }
 
     #[tool(
-        description = "List Helm chart template names and metadata without template source. Use get_package_template to fetch one decoded template. Requires package_id and version from get_package.",
+        description = "List Helm chart template names and metadata without template source (helm/kagent only upstream). Use get_package_template to fetch one decoded template. Requires package_id and version from get_package.",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     async fn get_package_templates(
@@ -251,7 +252,7 @@ impl ArtifactHubServer {
     }
 
     #[tool(
-        description = "Get one decoded Helm chart template by exact name. Use get_package_templates first to list template names. Requires package_id and version from get_package.",
+        description = "Get one decoded Helm chart template by exact name (helm/kagent only upstream). Use get_package_templates first to list template names. Requires package_id and version from get_package.",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     async fn get_package_template(
@@ -265,7 +266,7 @@ impl ArtifactHubServer {
     }
 
     #[tool(
-        description = "Get only the decoded Helm chart template source text by exact name. Use get_package_templates first to list template names. Requires package_id and version from get_package.",
+        description = "Get only the decoded Helm chart template source text by exact name (helm/kagent only upstream). Use get_package_templates first to list template names. Requires package_id and version from get_package.",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     async fn get_package_template_data(

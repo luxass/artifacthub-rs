@@ -22,3 +22,4 @@ e2e = []
 
 [dev-dependencies]
 wiremock = { workspace = true }
+artifacthub-server-mock = { workspace = true }
