@@ -53,6 +53,7 @@ async fn search_uses_hub_params_and_captures_total_count() {
         .search()
         .query("nginx")
         .kind("0")
+        .kind("3")
         .repo("bitnami")
         .org("vmware")
         .limit(1)
@@ -64,6 +65,26 @@ async fn search_uses_hub_params_and_captures_total_count() {
     assert_eq!(response.packages.len(), 1);
     assert_eq!(response.packages[0].package_id, "pkg-123");
     assert_eq!(response.total_count, Some(1));
+
+    let requests = hub.received_requests().await;
+    assert_eq!(requests.len(), 1);
+    let query: Vec<_> = requests[0].url.query_pairs().collect();
+    let expected = [
+        ("ts_query_web", "nginx"),
+        ("kind", "0"),
+        ("kind", "3"),
+        ("repo", "bitnami"),
+        ("org", "vmware"),
+        ("limit", "1"),
+        ("offset", "2"),
+    ];
+    assert_eq!(query.len(), expected.len());
+    for (key, value) in expected {
+        assert!(
+            query.contains(&(key.into(), value.into())),
+            "missing {key}={value}"
+        );
+    }
 }
 
 #[tokio::test]

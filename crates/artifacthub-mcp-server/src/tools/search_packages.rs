@@ -206,6 +206,7 @@ mod tests {
         Mock::given(method("GET"))
             .and(path("/packages/search"))
             .and(query_param("kind", "0"))
+            .and(query_param("kind", "3"))
             .and(query_param("verified_publisher", "true"))
             .and(query_param("sort", "stars"))
             .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
@@ -220,7 +221,7 @@ mod tests {
             SearchParams {
                 q: None,
                 ts_query: None,
-                kind: Some(vec!["helm".to_string()]),
+                kind: Some(vec!["helm".to_string(), "olm".to_string()]),
                 repo: None,
                 org: None,
                 user: None,

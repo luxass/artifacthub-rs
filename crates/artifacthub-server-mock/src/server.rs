@@ -24,4 +24,12 @@ impl HubMockServer {
     pub fn uri(&self) -> String {
         self.server.uri()
     }
+
+    /// Requests received by the mock, for assertions about the wire contract.
+    pub async fn received_requests(&self) -> Vec<wiremock::Request> {
+        self.server
+            .received_requests()
+            .await
+            .expect("request recording is enabled")
+    }
 }
