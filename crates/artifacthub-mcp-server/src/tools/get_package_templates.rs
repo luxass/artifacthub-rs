@@ -61,6 +61,37 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_get_templates_accepts_absent_templates() {
+        for body in [
+            serde_json::json!({"templates": null}),
+            serde_json::json!({"templates": []}),
+        ] {
+            let mock_server = MockServer::start().await;
+            Mock::given(method("GET"))
+                .and(path("/packages/pkg-123/1.0.0/templates"))
+                .respond_with(ResponseTemplate::new(200).set_body_json(body))
+                .expect(1)
+                .mount(&mock_server)
+                .await;
+
+            let result = handle_get_templates(
+                &test_server(&mock_server.uri()),
+                GetTemplatesParams {
+                    package_id: "pkg-123".to_string(),
+                    version: "1.0.0".to_string(),
+                },
+            )
+            .await
+            .unwrap();
+
+            assert_eq!(
+                serde_json::to_value(result.0).unwrap(),
+                serde_json::json!({"templates": []})
+            );
+        }
+    }
+
+    #[tokio::test]
     async fn test_get_templates_returns_templates() {
         let mock_server = MockServer::start().await;
 
