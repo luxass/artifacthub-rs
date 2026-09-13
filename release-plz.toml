@@ -5,6 +5,7 @@ git_release_draft = false
 pr_labels = ["release"]
 publish_timeout = "10m"
 repo_url = "https://github.com/luxass/artifacthub-rs"
+# Publish only when a release-plz PR is merged.
 release_always = false
 
 [[package]]
