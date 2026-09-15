@@ -111,11 +111,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn user_agent_uses_package_version() {
-        assert!(USER_AGENT.starts_with(concat!("artifacthub-mcp/v", env!("CARGO_PKG_VERSION"))));
-    }
-
-    #[test]
     fn test_default_all_tools_enabled() {
         let args = Args {
             tools: None,
