@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.10](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.9...artifacthub-mcp@0.2.10) - 2026-09-15
+
+### 🐛 Bug Fixes
+
+- align MCP metadata and user-agent version ([#33](https://github.com/luxass/artifacthub-rs/pull/33)) (by @luxass)
+
+### Contributors
+
+* @luxass
+
 ## [0.2.9](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.8...artifacthub-mcp@0.2.9) - 2026-09-12
 
 ### 🐛 Bug Fixes
