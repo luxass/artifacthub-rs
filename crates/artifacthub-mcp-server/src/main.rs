@@ -11,7 +11,7 @@ use rmcp::transport::stdio;
 use tools::{ALL_TOOL_NAMES, ArtifactHubServer};
 
 const USER_AGENT: &str = concat!(
-    "artifacthub-mcp/",
+    "artifacthub-mcp/v",
     env!("CARGO_PKG_VERSION"),
     " (+https://github.com/luxass/artifacthub-rs)"
 );
@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn user_agent_uses_package_version() {
-        assert!(USER_AGENT.starts_with(concat!("artifacthub-mcp/", env!("CARGO_PKG_VERSION"))));
+        assert!(USER_AGENT.starts_with(concat!("artifacthub-mcp/v", env!("CARGO_PKG_VERSION"))));
     }
 
     #[test]
