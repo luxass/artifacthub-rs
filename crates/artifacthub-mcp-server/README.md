@@ -1,6 +1,8 @@
 # artifacthub-mcp
 
-MCP server for [Artifact Hub](https://artifacthub.io) - search packages, get details, view changelogs, and extract Helm chart values directly from your AI coding assistant.
+An MCP server for [Artifact Hub](https://artifacthub.io) that gives AI coding assistants current package and Helm chart data. Search packages, inspect metadata, check versions and changelogs, and read a chart's `values.yaml`.
+
+This helps your assistant use the chart information that Artifact Hub publishes instead of guessing at package versions or Helm values.
 
 ## Install
 

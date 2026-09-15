@@ -1,6 +1,8 @@
 # artifacthub-rs
 
-Rust crates for the [Artifact Hub](https://artifacthub.io) API.
+Rust crates for the [Artifact Hub](https://artifacthub.io) API and an MCP server that gives AI coding assistants current package and Helm chart data.
+
+Use the client crate to access Artifact Hub from Rust. Use the MCP server to search packages, inspect metadata, check versions and changelogs, and read a chart's `values.yaml` from an AI coding assistant.
 
 ## Crates
 
