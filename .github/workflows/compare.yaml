@@ -1,4 +1,4 @@
-name: live-api-sweep
+name: compare
 
 on:
   schedule:
@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  sweep:
+  compare:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -32,11 +32,11 @@ jobs:
         with:
           components: clippy rustfmt
           tools: just
-          cache-key: sweep
+          cache-key: compare
           save-cache: ${{ github.ref_name == 'main' }}
 
-      - name: Run live-API conformance sweep
-        run: just sweep
+      - name: Run live comparison (Hub API vs MCP server)
+        run: just compare-mcp
 
       # Near-future: notify on failure via Cloudflare Worker -> SMS.
       # Add a step here with `if: failure()` that POSTs to the worker
@@ -47,7 +47,7 @@ jobs:
       #     curl -s -X POST "$WORKER_URL"
       #       -H "Authorization: Bearer $SMS_TOKEN"
       #       -H "Content-Type: application/json"
-      #       -d '{"text":"artifacthub-mcp sweep failed"}'
+      #       -d '{"text":"artifacthub-mcp compare failed"}'
       #   env:
       #     WORKER_URL: ${{ secrets.SWEEP_WORKER_URL }}
       #     SMS_TOKEN: ${{ secrets.SWEEP_SMS_TOKEN }}
