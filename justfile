@@ -11,18 +11,14 @@ check:
 test:
   cargo test --locked
 
-# Test the live sweep's comparison logic without network access
-sweep-test:
-  python3 -B -m unittest discover -s "{{justfile_directory()}}/scripts" -p "test_*.py"
-
 # Run e2e tests against real Artifact Hub API
 e2e:
   cargo test --locked --features e2e --test e2e -- --include-ignored
 
-# Run live-API conformance sweep over all MCP tools (requires network)
-sweep:
+# Diff Hub API vs MCP server: just compare-mcp
+compare-mcp:
   cargo build --locked
-  python3 "{{justfile_directory()}}/scripts/mcp_sweep.py" "{{justfile_directory()}}/target/debug/artifacthub-mcp"
+  python3 "{{justfile_directory()}}/scripts/mcp_compare.py"
 
 # Build
 build:

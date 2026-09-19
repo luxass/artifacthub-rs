@@ -54,7 +54,3 @@ jobs:
 
       - name: Test
         run: just test
-
-      - name: Test MCP sweep comparison logic
-        if: runner.os == 'Linux'
-        run: just sweep-test
