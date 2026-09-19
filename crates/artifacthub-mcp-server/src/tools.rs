@@ -19,6 +19,7 @@ pub mod validation;
 use std::collections::HashSet;
 
 use rmcp::handler::server::wrapper::Json;
+use rmcp::model::{Implementation, ServerCapabilities, ServerInfo};
 use rmcp::{ServerHandler, handler::server::wrapper::Parameters, tool, tool_handler, tool_router};
 
 use artifacthub_client::client::ArtifactHubClient;
@@ -284,4 +285,11 @@ impl ArtifactHubServer {
 }
 
 #[tool_handler]
-impl ServerHandler for ArtifactHubServer {}
+impl ServerHandler for ArtifactHubServer {
+    fn get_info(&self) -> ServerInfo {
+        ServerInfo::new(ServerCapabilities::default()).with_server_info(Implementation::new(
+            "artifacthub-mcp",
+            env!("CARGO_PKG_VERSION"),
+        ))
+    }
+}
