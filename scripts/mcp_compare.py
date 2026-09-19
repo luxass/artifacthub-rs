@@ -82,23 +82,29 @@ proc.stdin.write(
 proc.stdin.flush()
 
 nginx = hub_json("/packages/helm/bitnami/nginx")
+nginx_expected = {
+    key: value
+    for key, value in nginx.items()
+    if key not in ("readme", "available_versions")
+}
+nginx_expected.setdefault("keywords", [])
+
 redis = hub_json("/packages/helm/bitnami/redis")
 postgresql = hub_json("/packages/helm/bitnami/postgresql")
 loki = hub_json("/packages/helm/grafana-community/loki")
+nginx_security = hub_json(
+    f"/packages/{nginx['package_id']}/{nginx['version']}/security-report"
+)
+for report in nginx_security.values():
+    for result in report.setdefault("Results", []):
+        result.setdefault("Vulnerabilities", [])
 
 results = [
     compare(
         tool="get_package",
         url="/packages/helm/bitnami/nginx",
         arguments={"kind": "helm", "repo": "bitnami", "name": "nginx"},
-        expected={
-            **{
-                key: value
-                for key, value in nginx.items()
-                if key not in ("readme", "available_versions")
-            },
-            "keywords": nginx.get("keywords", []),
-        },
+        expected=nginx_expected,
     ),
     compare(
         tool="get_package_readme",
@@ -148,9 +154,7 @@ results = [
         tool="get_package_security_report",
         url=f"/packages/{nginx['package_id']}/{nginx['version']}/security-report",
         arguments={"package_id": nginx["package_id"], "version": nginx["version"]},
-        expected=hub_json(
-            f"/packages/{nginx['package_id']}/{nginx['version']}/security-report"
-        ),
+        expected=nginx_security,
     ),
     compare(
         tool="get_package_values_schema",
