@@ -27,7 +27,7 @@ def _fetch(path: str) -> tuple[int, bytes]:
         return response.status, response.read()
 
 
-def _fetch_with_retry(path: str) -> tuple[int, bytes]:
+def _fetch_with_retry(path: str) -> tuple[int, bytes, int]:
     url = HUB + path
     last_error: Exception | None = None
     for attempt in range(1, MAX_RETRIES + 1):
@@ -36,7 +36,7 @@ def _fetch_with_retry(path: str) -> tuple[int, bytes]:
             # Empty 200 (the Sep 28 flake) is retryable, not a drift signal.
             if status == 200 and len(body) == 0:
                 raise ValueError("empty body with status 200")
-            return status, body
+            return status, body, attempt
         except urllib.error.HTTPError as e:
             # Retry rate-limit / transient 5xx only; fail fast on other 4xx.
             retryable = e.code == 429 or 500 <= e.code <= 599
@@ -55,12 +55,13 @@ def _fetch_with_retry(path: str) -> tuple[int, bytes]:
 
 def hub_json(path: str):
     url = HUB + path
-    status, body = _fetch_with_retry(path)
+    status, body, attempt = _fetch_with_retry(path)
     try:
         return json.loads(body.decode())
     except json.JSONDecodeError as e:
         print(
-            f"compare unavailable: hub {url} status={status} len={len(body)} "
+            f"compare unavailable: hub {url} attempt={attempt}/{MAX_RETRIES} "
+            f"status={status} len={len(body)} "
             f"body={_preview(body)!r} json_error={e}",
             file=sys.stderr,
         )
@@ -69,7 +70,7 @@ def hub_json(path: str):
 
 def hub_text(path: str):
     url = HUB + path
-    status, body = _fetch_with_retry(path)
+    status, body, _attempt = _fetch_with_retry(path)
     # hub_text has no JSON parsing, so an empty body here is already
     # retried above; anything reaching here is returned as-is.
     if len(body) == 0:
@@ -84,7 +85,14 @@ def hub_text(path: str):
 def report_error(error_type, error, traceback):
     if issubclass(
         error_type,
-        (urllib.error.HTTPError, urllib.error.URLError, json.JSONDecodeError, ValueError),
+        (
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+            json.JSONDecodeError,
+            ValueError,
+            ConnectionError,
+            TimeoutError,
+        ),
     ):
         print(f"compare unavailable: {error}", file=sys.stderr)
         raise SystemExit(2)
@@ -126,6 +134,13 @@ def rpc(method, params):
             print(
                 f"compare unavailable: mcp method={method} id={request_id} "
                 f"len={len(raw)} line={raw[:200]!r} json_error={e}",
+                file=sys.stderr,
+            )
+            raise SystemExit(2)
+        if not isinstance(response, dict):
+            print(
+                f"compare unavailable: mcp method={method} id={request_id} "
+                f"got non-object JSON response type={type(response).__name__}",
                 file=sys.stderr,
             )
             raise SystemExit(2)
