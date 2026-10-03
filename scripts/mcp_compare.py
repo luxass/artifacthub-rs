@@ -4,34 +4,102 @@
 import json
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 
 HUB = "https://artifacthub.io/api/v1"
 BIN = "./target/debug/artifacthub-mcp"
+MAX_RETRIES = 3
+RETRY_BACKOFF_S = [1, 2]
+
+
+def _preview(body: bytes, limit: int = 200) -> str:
+    text = body.decode("utf-8", errors="replace")
+    shortened = text[:limit]
+    return shortened if len(text) <= limit else shortened + "…"
+
+
+def _fetch(path: str) -> tuple[int, bytes]:
+    """Single Hub GET. Returns (status, body). Raises URLError/HTTPError."""
+    url = HUB + path
+    with urllib.request.urlopen(url, timeout=30) as response:
+        return response.status, response.read()
+
+
+def _fetch_with_retry(path: str) -> tuple[int, bytes, int]:
+    url = HUB + path
+    last_error: Exception | None = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            status, body = _fetch(path)
+            # Empty 200 (the Sep 28 flake) is retryable, not a drift signal.
+            if status == 200 and len(body) == 0:
+                raise ValueError("empty body with status 200")
+            return status, body, attempt
+        except urllib.error.HTTPError as e:
+            # Retry rate-limit / transient 5xx only; fail fast on other 4xx.
+            retryable = e.code == 429 or 500 <= e.code <= 599
+            detail = f"hub {url} attempt {attempt}/{MAX_RETRIES}: HTTP {e.code} {e.reason}"
+            print(detail, file=sys.stderr)
+            last_error = e
+            if not retryable:
+                break
+        except (urllib.error.URLError, ValueError, TimeoutError, ConnectionError) as e:
+            print(f"hub {url} attempt {attempt}/{MAX_RETRIES}: {type(e).__name__}: {e}", file=sys.stderr)
+            last_error = e
+        if attempt < MAX_RETRIES:
+            time.sleep(RETRY_BACKOFF_S[min(attempt - 1, len(RETRY_BACKOFF_S) - 1)])
+    raise last_error if last_error else RuntimeError(f"hub {url}: unknown fetch failure")
+
+
+def hub_json(path: str):
+    url = HUB + path
+    status, body, attempt = _fetch_with_retry(path)
+    try:
+        return json.loads(body.decode())
+    except json.JSONDecodeError as e:
+        print(
+            f"compare unavailable: hub {url} attempt={attempt}/{MAX_RETRIES} "
+            f"status={status} len={len(body)} "
+            f"body={_preview(body)!r} json_error={e}",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+
+
+def hub_text(path: str):
+    url = HUB + path
+    status, body, _attempt = _fetch_with_retry(path)
+    # hub_text has no JSON parsing, so an empty body here is already
+    # retried above; anything reaching here is returned as-is.
+    if len(body) == 0:
+        print(
+            f"compare unavailable: hub {url} status={status} len=0 (empty text body)",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    return body.decode()
 
 
 def report_error(error_type, error, traceback):
     if issubclass(
         error_type,
-        (urllib.error.HTTPError, urllib.error.URLError, json.JSONDecodeError),
+        (
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+            json.JSONDecodeError,
+            ValueError,
+            ConnectionError,
+            TimeoutError,
+        ),
     ):
-        print(f"compare unavailable: {error}")
+        print(f"compare unavailable: {error}", file=sys.stderr)
         raise SystemExit(2)
     sys.__excepthook__(error_type, error, traceback)
 
 
 sys.excepthook = report_error
-
-
-def hub_json(path):
-    with urllib.request.urlopen(HUB + path, timeout=30) as response:
-        return json.loads(response.read().decode())
-
-
-def hub_text(path):
-    with urllib.request.urlopen(HUB + path, timeout=30) as response:
-        return response.read().decode()
 
 
 proc = subprocess.Popen(
@@ -51,7 +119,31 @@ def rpc(method, params):
     )
     proc.stdin.flush()
     while True:
-        response = json.loads(proc.stdout.readline())
+        raw = proc.stdout.readline()
+        if raw == "":
+            code = proc.poll()
+            print(
+                f"compare unavailable: mcp method={method} id={request_id} "
+                f"got empty stdout (process exited? returncode={code})",
+                file=sys.stderr,
+            )
+            raise SystemExit(2)
+        try:
+            response = json.loads(raw)
+        except json.JSONDecodeError as e:
+            print(
+                f"compare unavailable: mcp method={method} id={request_id} "
+                f"len={len(raw)} line={raw[:200]!r} json_error={e}",
+                file=sys.stderr,
+            )
+            raise SystemExit(2)
+        if not isinstance(response, dict):
+            print(
+                f"compare unavailable: mcp method={method} id={request_id} "
+                f"got non-object JSON response type={type(response).__name__}",
+                file=sys.stderr,
+            )
+            raise SystemExit(2)
         if "id" in response:
             return response["result"]
 
