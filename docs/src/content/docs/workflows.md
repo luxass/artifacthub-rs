@@ -1,6 +1,6 @@
 ---
 title: Example workflows
-navTitle: Example workflows
+navTitle: Examples
 order: 2
 description: Prompts you can use with your assistant, and the tool calls behind them.
 ---

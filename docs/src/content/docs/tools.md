@@ -1,6 +1,6 @@
 ---
 title: Tool reference
-navTitle: Tool reference
+navTitle: Tools
 order: 3
 description: All 15 tools exposed by artifacthub-mcp, with required inputs and optional filters.
 ---

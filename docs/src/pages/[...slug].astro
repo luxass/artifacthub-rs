@@ -49,21 +49,30 @@ const source = "https://github.com/luxass/artifacthub-rs";
       href="#content"
     >Skip to content</a>
     <div class="mx-auto max-w-[690px] px-6 py-5">
-      <header class="mb-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 font-mono leading-normal">
-        <a class="font-medium hover:text-accent" href="/" aria-label="Artifact Hub MCP home">artifacthub-mcp</a>
-        <nav class="flex flex-wrap gap-x-3 gap-y-2 text-muted" aria-label="Documentation">
-          {navigation.filter((item) => item.href !== "/").map((item) => (
-            <a
-              href={item.href}
-              aria-current={item.href === currentPath ? "page" : undefined}
-              class:list={[
-                "lowercase hover:text-accent",
-                item.href === currentPath && "text-foreground underline underline-offset-4",
-              ]}
-            >{item.label}</a>
-          ))}
-          <a class="hover:text-accent" href={source}>github</a>
-        </nav>
+      <header class="mb-8 flex flex-col items-start justify-between gap-3 border-b border-line pb-4 leading-normal sm:flex-row sm:items-center">
+        <a
+          class="font-mono text-xs font-medium hover:text-accent"
+          href="/"
+          aria-label="Artifact Hub MCP home"
+          aria-current={currentPath === "/" ? "page" : undefined}
+        >artifacthub-mcp</a>
+        <div class="flex items-center gap-4 sm:gap-6">
+          <nav class="flex items-center gap-4 sm:gap-6" aria-label="Documentation">
+            {navigation.filter((item) => item.href !== "/").map((item) => (
+              <a
+                href={item.href}
+                aria-current={item.href === currentPath ? "page" : undefined}
+                class:list={[
+                  "hover:text-accent",
+                  item.href === currentPath
+                    ? "font-medium text-foreground underline decoration-accent underline-offset-4"
+                    : "text-muted",
+                ]}
+              >{item.label}</a>
+            ))}
+          </nav>
+          <a class="border-l border-line pl-4 text-muted hover:text-accent sm:pl-6" href={source}>GitHub</a>
+        </div>
       </header>
       <main id="content" tabindex="-1" class="min-w-0">
         <div class="mb-8">

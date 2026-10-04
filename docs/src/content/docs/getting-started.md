@@ -1,6 +1,6 @@
 ---
 title: Getting started
-navTitle: Getting started
+navTitle: Setup
 order: 1
 description: Install the binary, connect your MCP client, and make your first package lookup.
 ---
