@@ -17,9 +17,7 @@ interface Props {
   id: CollectionEntry<"docs">["id"];
 }
 
-const entries = (await getCollection("docs")).sort(
-  (left, right) => left.data.order - right.data.order,
-);
+const entries = (await getCollection("docs")).sort((left, right) => left.data.order - right.data.order);
 const entry = entries.find((entry) => entry.id === Astro.props.id);
 if (!entry) {
   throw new Error(`Documentation entry not found: ${Astro.props.id}`);
@@ -48,11 +46,8 @@ const source = "https://github.com/luxass/artifacthub-rs";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body class="bg-background font-sans text-[15px] leading-[1.7] text-foreground">
-    <a
-      class="fixed -top-24 left-4 z-10 bg-background px-3 py-2 text-accent focus:top-4"
-      href="#content"
-    >Skip to content</a>
-    <div class="mx-auto max-w-[720px] px-5 py-6 sm:px-6">
+    <a class="fixed -top-24 left-4 z-10 bg-background px-3 py-2 text-accent focus:top-4" href="#content">Skip to content</a>
+    <div class="mx-auto max-w-180 px-5 py-6 sm:px-6">
       <Header navigation={navigation} source={source} />
       <main id="content" tabindex="-1" class="min-w-0">
         <div class="mb-8">
@@ -64,12 +59,22 @@ const source = "https://github.com/luxass/artifacthub-rs";
           <Content />
         </article>
         <nav class="mt-10 flex justify-between gap-4 border-t border-line pt-4 text-sm text-accent" aria-label="Previous and next pages">
-          {previous ? (
-            <a class="hover:underline" href={previous.href}>← {previous.label}</a>
-          ) : <span />}
-          {next && (
-            <a class="text-right hover:underline" href={next.href}>{next.label} →</a>
-          )}
+          {
+            previous ? (
+              <a class="hover:underline" href={previous.href}>
+                ← {previous.label}
+              </a>
+            ) : (
+              <span />
+            )
+          }
+          {
+            next && (
+              <a class="text-right hover:underline" href={next.href}>
+                {next.label} →
+              </a>
+            )
+          }
         </nav>
       </main>
       <Footer source={source} />

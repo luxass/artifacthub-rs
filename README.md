@@ -13,9 +13,7 @@ Use the client crate to access Artifact Hub from Rust. Use the MCP server to sea
 
 ## Documentation
 
-The static Astro site lives in [`docs/`](docs/README.md). It covers MCP client setup, example workflows, and all 15 tools.
-
-With docs dependencies installed separately, use `pnpm dev` from the repository root to preview it. `pnpm build` writes the static site to `docs/dist/`.
+The docs site is in [`docs/`](docs/).
 
 ## Development
 
