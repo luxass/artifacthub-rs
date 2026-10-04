@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "artifacthub-mcp",
+  "compatibility_date": "2026-01-17",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "html_handling": "force-trailing-slash"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "workers_dev": false,
+  "previews": {},
+  "routes": [
+    {
+      "custom_domain": true,
+      "pattern": "artifacthub-mcp.luxass.dev"
+    },
+    {
+      "custom_domain": true,
+      "pattern": "preview.artifacthub-mcp.luxass.dev",
+      "enabled": false,
+      "previews_enabled": true
+    },
+  ]
+}
