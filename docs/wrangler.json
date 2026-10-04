@@ -11,11 +11,18 @@
   "observability": {
     "enabled": true
   },
+  "workers_dev": false,
   "previews": {},
   "routes": [
     {
       "custom_domain": true,
       "pattern": "artifacthub-mcp.luxass.dev"
-    }
+    },
+    {
+      "custom_domain": true,
+      "pattern": "preview.artifacthub-mcp.luxass.dev",
+      "enabled": false,
+      "previews_enabled": true
+    },
   ]
 }
