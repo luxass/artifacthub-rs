@@ -1,7 +1,7 @@
 ---
 title: Tool reference
 navTitle: Tools
-order: 3
+order: 1
 description: All 15 tools exposed by artifacthub-mcp, with required inputs and optional filters.
 ---
 
@@ -157,4 +157,4 @@ The [kind mappings in the Rust client](https://github.com/luxass/artifacthub-rs/
 
 All tools are enabled by default. Use `--tools` to expose only selected names, or `--exclude-tools` to remove names from the default set. Do not pass both.
 
-See [client setup and filtering examples](/getting-started/#limit-the-exposed-tools).
+See [client setup and filtering examples](/#limit-the-exposed-tools).

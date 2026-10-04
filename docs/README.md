@@ -8,6 +8,8 @@ A static Astro site for `artifacthub-mcp`.
 - `src/styles/global.css` imports Tailwind and styles rendered Markdown.
 - `astro.config.ts` configures the static build and Tailwind through PostCSS.
 
+The homepage contains installation, client setup, and expandable examples. `/tools/` contains the tool reference. The old `/getting-started/` and `/workflows/` URLs redirect to homepage sections.
+
 Each page has `title`, `description`, `navTitle`, and `order` metadata. The `index` entry renders at `/`; other entries use their collection IDs as paths. Navigation and previous/next links follow `order`.
 
 ## Workspace
@@ -31,7 +33,7 @@ pnpm preview
 
 The build produces `docs/dist/`. It does not build or start the Rust server.
 
-No dependencies have been installed for this setup, and no pnpm lockfile has been generated. When installation is authorized, use `sfw pnpm install`. Keep the security policy in place and commit the generated lockfile before configuring reproducible CI builds.
+For dependency installation, use `sfw pnpm install`. Keep the security policy in place and commit the generated lockfile before configuring reproducible CI builds.
 
 ## Hosting
 

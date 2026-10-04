@@ -4,6 +4,10 @@ import tailwindcss from "@tailwindcss/postcss";
 export default defineConfig({
   output: "static",
   trailingSlash: "always",
+  redirects: {
+    "/getting-started/": "/#install-the-server",
+    "/workflows/": "/#examples",
+  },
   vite: {
     css: {
       postcss: {
