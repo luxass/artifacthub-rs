@@ -3,6 +3,9 @@
 node_modules/
 /docs/dist/
 /docs/.astro/
+.wrangler/
+.dev.vars
+.dev.vars.*
 
 .env
 .env.*

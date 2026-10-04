@@ -1,13 +1,13 @@
 # Documentation site
 
-A static Astro site for `artifacthub-mcp`.
+Docs for `artifacthub-mcp`.
 
 - `src/content/docs/` contains the Markdown pages.
 - `src/content.config.ts` defines their metadata schema.
 - `src/components/` contains the header, footer, installation instructions, and reusable tabs.
 - `src/pages/[...slug].astro` generates routes and navigation from the collection and contains the page layout.
 - `src/styles/global.css` imports Tailwind and styles rendered Markdown.
-- `astro.config.ts` configures the static build and Tailwind through PostCSS.
+- `astro.config.ts` configures the Cloudflare adapter, static build, and Tailwind through PostCSS.
 
 The homepage contains installation, client setup, and expandable examples. `/tools/` contains the tool reference. The old `/getting-started/` and `/workflows/` URLs redirect to homepage sections.
 
@@ -23,7 +23,7 @@ Astro's checker accepts TypeScript 5 or 6, so this site's tooling catalog pins T
 
 ## Development
 
-After dependencies have been installed separately, use these commands from the repository root:
+From the repository root:
 
 ```sh
 pnpm dev
@@ -38,6 +38,6 @@ For dependency installation, use `sfw pnpm install`. Keep the security policy in
 
 ## Hosting
 
-The static build needs no Cloudflare adapter or Worker. For a git-based static deployment, the build command is `pnpm build` at the repository root and the output directory is `docs/dist/`.
+The Cloudflare adapter keeps pages statically generated. Build with `pnpm build`; output is in `docs/dist/`.
 
-Deployment configuration is left to the repository owner. No account, domain, or deployment integration is configured here.
+Deployment is managed by the repository owner.
