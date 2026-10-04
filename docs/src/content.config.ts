@@ -9,7 +9,6 @@ const docs = defineCollection({
     description: z.string().min(1),
     navTitle: z.string().min(1),
     order: z.number().int().nonnegative(),
-    eyebrow: z.string().optional(),
   }),
 });
 

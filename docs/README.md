@@ -8,7 +8,7 @@ A static Astro site for `artifacthub-mcp`.
 - `src/styles/global.css` imports Tailwind and styles rendered Markdown.
 - `astro.config.ts` configures the static build and Tailwind through PostCSS.
 
-Each page has `title`, `description`, `navTitle`, and `order` metadata. `eyebrow` is optional. The `index` entry renders at `/`; other entries use their collection IDs as paths. Navigation and previous/next links follow `order`.
+Each page has `title`, `description`, `navTitle`, and `order` metadata. The `index` entry renders at `/`; other entries use their collection IDs as paths. Navigation and previous/next links follow `order`.
 
 ## Workspace
 

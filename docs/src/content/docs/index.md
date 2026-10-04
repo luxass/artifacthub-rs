@@ -1,9 +1,8 @@
 ---
-title: Package facts for your assistant.
+title: Artifact Hub MCP
 navTitle: Overview
 order: 0
-description: Search Artifact Hub, read Helm chart values, and inspect releases through your AI assistant. Use published package data instead of guessed versions and configuration.
-eyebrow: Artifact Hub MCP
+description: An MCP server for searching Artifact Hub packages and reading Helm chart data.
 ---
 
 ## What can it do?
