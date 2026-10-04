@@ -13,7 +13,7 @@ Use the client crate to access Artifact Hub from Rust. Use the MCP server to sea
 
 ## Documentation
 
-The docs site is in [`docs/`](docs/).
+[artifacthub-mcp.luxass.dev](https://artifacthub-mcp.luxass.dev)
 
 ## Development
 

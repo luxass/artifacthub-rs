@@ -3,8 +3,9 @@ import cloudflare from "@astrojs/cloudflare";
 import tailwindcss from "@tailwindcss/postcss";
 
 export default defineConfig({
+  site: "https://artifacthub-mcp.luxass.dev",
   output: "static",
-  adapter: cloudflare({ imageService: "passthrough", prerenderEnvironment: "node" }),
+  adapter: cloudflare({ imageService: "passthrough" }),
   session: false,
   trailingSlash: "always",
   redirects: {
