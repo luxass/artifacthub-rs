@@ -4,6 +4,7 @@ A static Astro site for `artifacthub-mcp`.
 
 - `src/content/docs/` contains the Markdown pages.
 - `src/content.config.ts` defines their metadata schema.
+- `src/components/` contains the header, footer, installation instructions, and reusable tabs.
 - `src/pages/[...slug].astro` generates routes and navigation from the collection and contains the page layout.
 - `src/styles/global.css` imports Tailwind and styles rendered Markdown.
 - `astro.config.ts` configures the static build and Tailwind through PostCSS.

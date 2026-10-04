@@ -3,6 +3,7 @@ import { getCollection, render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import Installation from "../components/Installation.astro";
 import "../styles/global.css";
 
 export async function getStaticPaths() {
@@ -43,7 +44,7 @@ const source = "https://github.com/luxass/artifacthub-rs";
     <meta name="description" content={entry.data.description} />
     <meta name="theme-color" content="#f3f7f6" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#101b1a" media="(prefers-color-scheme: dark)" />
-    <title>{entry.data.title} | artifacthub-mcp</title>
+    <title>{entry.id === "index" ? entry.data.title : `${entry.data.title} | artifacthub-mcp`}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body class="bg-background font-sans text-[15px] leading-[1.7] text-foreground">
@@ -58,7 +59,10 @@ const source = "https://github.com/luxass/artifacthub-rs";
           <h1 class="text-[28px] leading-tight font-semibold tracking-tight">{entry.data.title}</h1>
           <p class="mt-2 text-muted">{entry.data.description}</p>
         </div>
-        <article class="prose"><Content /></article>
+        <article class="prose">
+          {entry.id === "index" && <Installation />}
+          <Content />
+        </article>
         <nav class="mt-10 flex justify-between gap-4 border-t border-line pt-4 text-sm text-accent" aria-label="Previous and next pages">
           {previous ? (
             <a class="hover:underline" href={previous.href}>← {previous.label}</a>

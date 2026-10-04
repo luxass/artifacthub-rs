@@ -1,42 +1,9 @@
 ---
-title: Artifact Hub MCP
+title: artifacthub-mcp
 navTitle: Setup
 order: 0
-description: Search Artifact Hub packages and read Helm chart data through your AI assistant.
+description: An independent MCP server for searching Artifact Hub packages and reading Helm chart data.
 ---
-
-`artifacthub-mcp` connects your assistant to [Artifact Hub](https://artifacthub.io) with 15 read-only tools. It runs locally over stdio, needs no API key, and does not install charts or access your cluster.
-
-## Install the server
-
-Choose one installation method.
-
-### Homebrew
-
-For macOS and Linux:
-
-```sh
-brew install luxass/homebrew-tap/artifacthub-mcp
-```
-
-### Cargo
-
-With a Rust toolchain installed:
-
-```sh
-cargo install --locked artifacthub-mcp
-```
-
-### Pre-built binaries
-
-Download the binary for your platform from [GitHub Releases](https://github.com/luxass/artifacthub-rs/releases). Pre-built binaries are available for Linux and macOS.
-
-Put the binary on your `PATH`, then check it:
-
-```sh
-artifacthub-mcp --version
-artifacthub-mcp --help
-```
 
 ## Connect a client
 
