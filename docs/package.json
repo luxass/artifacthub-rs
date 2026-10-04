@@ -1,0 +1,26 @@
+{
+  "name": "@artifacthub-rs/docs",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "astro": "catalog:astro"
+  },
+  "devDependencies": {
+    "@astrojs/check": "catalog:astro",
+    "@types/node": "catalog:types",
+    "@tailwindcss/postcss": "catalog:tailwind",
+    "tailwindcss": "catalog:tailwind",
+    "typescript": "catalog:tooling"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@12.4.2"
+}

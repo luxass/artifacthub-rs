@@ -1,0 +1,129 @@
+---
+import { getCollection, render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import "../styles/global.css";
+
+export async function getStaticPaths() {
+  const entries = (await getCollection("docs")).sort(
+    (left, right) => left.data.order - right.data.order,
+  );
+  const navigation = entries.map((entry) => ({
+    href: entry.id === "index" ? "/" : `/${entry.id}/`,
+    label: entry.data.navTitle,
+  }));
+
+  return entries.map((entry) => ({
+    params: { slug: entry.id === "index" ? undefined : entry.id },
+    props: { entry, navigation },
+  }));
+}
+
+interface Props {
+  entry: CollectionEntry<"docs">;
+  navigation: { href: string; label: string }[];
+}
+
+const { entry, navigation } = Astro.props;
+const { Content, headings } = await render(entry);
+const currentPath = Astro.url.pathname;
+const currentIndex = navigation.findIndex((item) => item.href === currentPath);
+const previous = navigation[currentIndex - 1];
+const next = navigation[currentIndex + 1];
+const toc = headings.filter((heading) => heading.depth === 2);
+const source = "https://github.com/luxass/artifacthub-rs";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={entry.data.description} />
+    <meta name="theme-color" content="#f6f3eb" />
+    <title>{entry.data.title} | Artifact Hub MCP</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="m-0 bg-paper font-sans text-ink">
+    <a
+      class="fixed -top-24 left-4 z-50 rounded bg-surface px-4 py-2 text-forest focus:top-4"
+      href="#content"
+    >Skip to content</a>
+    <header class="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-paper px-5 py-4 md:px-8">
+      <a class="flex items-center gap-3 text-base font-semibold" href="/" aria-label="Artifact Hub MCP home">
+        <img src="/favicon.svg" width="32" height="32" alt="" />
+        <span>Artifact Hub <strong class="font-normal text-muted">MCP</strong></span>
+      </a>
+      <div class="flex items-center gap-8 text-sm">
+        <span class="hidden text-muted md:inline">Documentation</span>
+        <a class="text-forest hover:underline" href={source}>GitHub <span aria-hidden="true">↗</span></a>
+      </div>
+    </header>
+    <div class="mx-auto max-w-[1320px] px-5 pt-5 md:grid md:grid-cols-[210px_minmax(0,1fr)] md:gap-8 md:px-8 md:pt-11 xl:grid-cols-[230px_minmax(0,760px)_180px] xl:gap-12">
+      <aside class="mb-9 md:sticky md:top-28 md:mb-0 md:max-h-[calc(100vh-8rem)] md:self-start md:overflow-y-auto">
+        <p class="mb-5 hidden text-xs font-semibold tracking-widest text-muted md:block">The MCP server</p>
+        <nav class="flex flex-wrap gap-1 md:grid" aria-label="Documentation">
+          {navigation.map((item) => (
+            <a
+              href={item.href}
+              aria-current={item.href === currentPath ? "page" : undefined}
+              class:list={[
+                "rounded-md border-l-2 px-3 py-2 text-sm font-medium hover:bg-wash md:py-3",
+                item.href === currentPath ? "border-forest bg-wash" : "border-transparent",
+              ]}
+            >{item.label}</a>
+          ))}
+        </nav>
+        <div class="mx-3 mt-8 hidden border-t border-line pt-6 text-sm md:block">
+          <p class="font-medium">
+            <span class="mr-1 inline-block size-1.5 rounded-full bg-forest" aria-hidden="true"></span>
+            Read-only by design
+          </p>
+          <p class="mt-2 text-muted">Package data from Artifact Hub. No cluster access.</p>
+          <a class="mt-4 inline-block text-xs text-forest hover:underline" href="https://artifacthub.io">
+            Browse Artifact Hub ↗
+          </a>
+        </div>
+      </aside>
+      <main id="content" tabindex="-1" class="min-w-0">
+        <div class="mb-8 md:mb-10">
+          <p class="mb-3 text-xs font-semibold tracking-widest text-forest">
+            {entry.data.eyebrow ?? "Documentation"}
+          </p>
+          <h1 class="mb-4 text-4xl leading-tight font-semibold tracking-tight text-balance md:text-5xl">
+            {entry.data.title}
+          </h1>
+          <p class="max-w-2xl text-base leading-relaxed text-muted md:text-lg">{entry.data.description}</p>
+        </div>
+        <article class="prose"><Content /></article>
+        <nav class="mt-14 flex justify-between gap-4 border-t border-line pt-5 text-sm text-forest" aria-label="Previous and next pages">
+          {previous ? (
+            <a class="hover:underline" href={previous.href}>
+              <small class="mb-1 block text-xs text-muted">Previous</small>
+              ← {previous.label}
+            </a>
+          ) : <span />}
+          {next && (
+            <a class="text-right hover:underline" href={next.href}>
+              <small class="mb-1 block text-xs text-muted">Next</small>
+              {next.label} →
+            </a>
+          )}
+        </nav>
+        <footer class="flex justify-between gap-4 pt-10 pb-6 text-xs text-muted">
+          <a class="hover:underline" href={source + "/tree/main/docs"}>Docs source</a>
+          <span>artifacthub-rs · MIT</span>
+        </footer>
+      </main>
+      {toc.length > 0 && (
+        <aside class="sticky top-28 hidden max-h-[calc(100vh-8rem)] self-start overflow-y-auto xl:block">
+          <p class="mb-5 text-xs font-semibold tracking-widest text-muted">On this page</p>
+          <nav class="grid gap-3" aria-label="On this page">
+            {toc.map((heading) => (
+              <a class="text-xs text-muted hover:text-forest" href={"#" + heading.slug}>{heading.text}</a>
+            ))}
+          </nav>
+        </aside>
+      )}
+    </div>
+  </body>
+</html>

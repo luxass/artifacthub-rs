@@ -1,0 +1,22 @@
+packages:
+  - "docs"
+
+minimumReleaseAge: 5760
+ignoreScripts: true
+strictDepBuilds: true
+blockExoticSubdeps: true
+
+catalogs:
+  astro:
+    astro: 7.3.5
+    "@astrojs/check": 0.9.10
+
+  tailwind:
+    tailwindcss: 4.1.18
+    "@tailwindcss/postcss": 4.1.18
+
+  tooling:
+    typescript: 6.0.3
+
+  types:
+    "@types/node": 26.4.1

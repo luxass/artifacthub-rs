@@ -11,6 +11,12 @@ Use the client crate to access Artifact Hub from Rust. Use the MCP server to sea
 | [`artifacthub-client`](crates/artifacthub-client) | Rust client library for the Artifact Hub API | [![crates.io](https://img.shields.io/crates/v/artifacthub-client.svg)](https://crates.io/crates/artifacthub-client) |
 | [`artifacthub-mcp`](crates/artifacthub-mcp-server) | MCP server for Artifact Hub | [![crates.io](https://img.shields.io/crates/v/artifacthub-mcp.svg)](https://crates.io/crates/artifacthub-mcp) |
 
+## Documentation
+
+The static Astro site lives in [`docs/`](docs/README.md). It covers MCP client setup, example workflows, and all 15 tools.
+
+With docs dependencies installed separately, use `pnpm dev` from the repository root to preview it. `pnpm build` writes the static site to `docs/dist/`.
+
 ## Development
 
 ```sh
