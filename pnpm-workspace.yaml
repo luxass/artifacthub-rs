@@ -5,6 +5,7 @@ minimumReleaseAge: 5760
 ignoreScripts: true
 strictDepBuilds: true
 blockExoticSubdeps: true
+trustPolicy: no-downgrade
 
 catalogs:
   astro:
