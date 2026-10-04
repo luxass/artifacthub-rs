@@ -4,26 +4,27 @@ import type { CollectionEntry } from "astro:content";
 import "../styles/global.css";
 
 export async function getStaticPaths() {
-  const entries = (await getCollection("docs")).sort(
-    (left, right) => left.data.order - right.data.order,
-  );
-  const navigation = entries.map((entry) => ({
-    href: entry.id === "index" ? "/" : `/${entry.id}/`,
-    label: entry.data.navTitle,
-  }));
-
-  return entries.map((entry) => ({
+  return (await getCollection("docs")).map((entry) => ({
     params: { slug: entry.id === "index" ? undefined : entry.id },
-    props: { entry, navigation },
+    props: { id: entry.id },
   }));
 }
 
 interface Props {
-  entry: CollectionEntry<"docs">;
-  navigation: { href: string; label: string }[];
+  id: CollectionEntry<"docs">["id"];
 }
 
-const { entry, navigation } = Astro.props;
+const entries = (await getCollection("docs")).sort(
+  (left, right) => left.data.order - right.data.order,
+);
+const entry = entries.find((entry) => entry.id === Astro.props.id);
+if (!entry) {
+  throw new Error(`Documentation entry not found: ${Astro.props.id}`);
+}
+const navigation = entries.map((entry) => ({
+  href: entry.id === "index" ? "/" : `/${entry.id}/`,
+  label: entry.data.navTitle,
+}));
 const { Content } = await render(entry);
 const currentPath = Astro.url.pathname;
 const currentIndex = navigation.findIndex((item) => item.href === currentPath);
@@ -43,27 +44,27 @@ const source = "https://github.com/luxass/artifacthub-rs";
     <title>{entry.data.title} | artifacthub-mcp</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
-  <body class="bg-background font-sans text-[13px] leading-relaxed text-foreground">
+  <body class="bg-background font-sans text-[15px] leading-[1.7] text-foreground">
     <a
       class="fixed -top-24 left-4 z-10 bg-background px-3 py-2 text-accent focus:top-4"
       href="#content"
     >Skip to content</a>
-    <div class="mx-auto max-w-[690px] px-6 py-5">
-      <header class="mb-8 flex flex-col items-start justify-between gap-3 border-b border-line pb-4 leading-normal sm:flex-row sm:items-center">
+    <div class="mx-auto max-w-[720px] px-5 py-6 sm:px-6">
+      <header class="mb-8 flex flex-col justify-between gap-4 border-b border-line pb-4 leading-normal sm:flex-row sm:items-center">
         <a
-          class="font-mono text-xs font-medium hover:text-accent"
+          class="self-start font-mono text-sm font-medium hover:text-accent"
           href="/"
           aria-label="Artifact Hub MCP home"
           aria-current={currentPath === "/" ? "page" : undefined}
         >artifacthub-mcp</a>
-        <div class="flex items-center gap-4 sm:gap-6">
-          <nav class="flex items-center gap-4 sm:gap-6" aria-label="Documentation">
+        <div class="flex items-center justify-between gap-5 text-sm sm:justify-start sm:gap-8">
+          <nav class="flex items-center gap-5" aria-label="Documentation">
             {navigation.filter((item) => item.href !== "/").map((item) => (
               <a
                 href={item.href}
                 aria-current={item.href === currentPath ? "page" : undefined}
                 class:list={[
-                  "hover:text-accent",
+                  "whitespace-nowrap hover:text-accent",
                   item.href === currentPath
                     ? "font-medium text-foreground underline decoration-accent underline-offset-4"
                     : "text-muted",
@@ -71,16 +72,16 @@ const source = "https://github.com/luxass/artifacthub-rs";
               >{item.label}</a>
             ))}
           </nav>
-          <a class="border-l border-line pl-4 text-muted hover:text-accent sm:pl-6" href={source}>GitHub</a>
+          <a class="text-muted hover:text-accent" href={source}>GitHub</a>
         </div>
       </header>
       <main id="content" tabindex="-1" class="min-w-0">
         <div class="mb-8">
-          <h1 class="text-2xl leading-8 font-semibold tracking-tight">{entry.data.title}</h1>
+          <h1 class="text-[28px] leading-tight font-semibold tracking-tight">{entry.data.title}</h1>
           <p class="mt-2 text-muted">{entry.data.description}</p>
         </div>
         <article class="prose"><Content /></article>
-        <nav class="mt-10 flex justify-between gap-4 border-t border-line pt-4 font-mono text-xs text-accent" aria-label="Previous and next pages">
+        <nav class="mt-10 flex justify-between gap-4 border-t border-line pt-4 text-sm text-accent" aria-label="Previous and next pages">
           {previous ? (
             <a class="hover:underline" href={previous.href}>← {previous.label}</a>
           ) : <span />}
@@ -89,7 +90,7 @@ const source = "https://github.com/luxass/artifacthub-rs";
           )}
         </nav>
       </main>
-      <footer class="mt-8 flex flex-wrap justify-between gap-3 font-mono text-xs text-muted">
+      <footer class="mt-8 flex flex-wrap justify-between gap-3 text-xs text-muted">
         <a class="hover:text-accent" href={source + "/tree/main/docs"}>source</a>
         <a class="hover:text-accent" href="https://artifacthub.io">artifacthub.io</a>
       </footer>

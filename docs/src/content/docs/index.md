@@ -9,14 +9,12 @@ description: An MCP server for searching Artifact Hub packages and reading Helm 
 
 [Artifact Hub](https://artifacthub.io) indexes Helm charts and other cloud-native packages. `artifacthub-mcp` gives your MCP-compatible assistant 15 read-only tools to query that data.
 
-| Ask your assistant to… | It can use… |
-| --- | --- |
-| Find a chart for PostgreSQL | Package search with kind, repository, and publisher filters |
-| Check which chart versions exist | Package metadata and version history |
-| Explain a chart's configuration | Default `values.yaml`, values schema, and README |
-| Inspect the resources a chart defines | Template names and decoded template source |
-| Review an upgrade | Published changelogs and security reports |
-| Find a repository | Repository search by name, URL, user, or organization |
+- Find packages by kind, repository, or publisher.
+- Check package metadata and available versions.
+- Read a chart's default `values.yaml`, values schema, and README.
+- Inspect chart template names and source.
+- Review published changelogs and security reports.
+- Search repositories by name, URL, user, or organization.
 
 Start with [installation and client setup](/getting-started/), then try an [example workflow](/workflows/). The [tool reference](/tools/) lists every tool and its inputs.
 
