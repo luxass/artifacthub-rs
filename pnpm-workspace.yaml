@@ -21,3 +21,6 @@ catalogs:
 
   types:
     "@types/node": 26.4.1
+
+overrides:
+  "@astrojs/check@0.9.10>chokidar": 5.0.0
