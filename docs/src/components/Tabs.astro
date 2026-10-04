@@ -1,0 +1,89 @@
+---
+interface Props {
+  id: string;
+  label: string;
+  tabs: { id: string; label: string }[];
+}
+
+const { id, label, tabs } = Astro.props;
+---
+
+<docs-tabs class="block">
+  <div class="flex gap-5 border-b border-line" role="tablist" aria-label={label} hidden>
+    {tabs.map((tab, index) => (
+      <button
+        class="cursor-pointer border-b-2 border-transparent py-2 text-sm whitespace-nowrap text-muted hover:text-foreground aria-selected:border-accent aria-selected:text-foreground"
+        type="button"
+        role="tab"
+        id={`${id}-${tab.id}-tab`}
+        aria-controls={`${id}-${tab.id}-panel`}
+        aria-selected={index === 0 ? "true" : "false"}
+        tabindex={index === 0 ? 0 : -1}
+      >{tab.label}</button>
+    ))}
+  </div>
+  {tabs.map((tab) => (
+    <div role="tabpanel" id={`${id}-${tab.id}-panel`} aria-labelledby={`${id}-${tab.id}-tab`} tabindex="0">
+      <h3 data-fallback-title>{tab.label}</h3>
+      <slot name={tab.id} />
+    </div>
+  ))}
+</docs-tabs>
+
+<script>
+  class DocsTabs extends HTMLElement {
+    connectedCallback() {
+      const tablist = this.querySelector<HTMLElement>(":scope > [role='tablist']");
+      const tabs = [...this.querySelectorAll<HTMLButtonElement>(":scope > [role='tablist'] > [role='tab']")];
+      const panels = [...this.querySelectorAll<HTMLElement>(":scope > [role='tabpanel']")];
+      if (!tablist || tabs.length === 0 || tabs.length !== panels.length) return;
+
+      const activate = (index: number) => {
+        tabs.forEach((tab, position) => {
+          tab.setAttribute("aria-selected", position === index ? "true" : "false");
+          tab.tabIndex = position === index ? 0 : -1;
+        });
+        panels.forEach((panel, position) => {
+          panel.hidden = position !== index;
+        });
+      };
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => activate(index));
+        tab.addEventListener("keydown", (event) => {
+          if (event.altKey || event.ctrlKey || event.metaKey) return;
+          let next: number;
+          switch (event.key) {
+            case "ArrowRight":
+              next = (index + 1) % tabs.length;
+              break;
+            case "ArrowLeft":
+              next = (index - 1 + tabs.length) % tabs.length;
+              break;
+            case "Home":
+              next = 0;
+              break;
+            case "End":
+              next = tabs.length - 1;
+              break;
+            default:
+              return;
+          }
+          event.preventDefault();
+          activate(next);
+          tabs[next]?.focus();
+        });
+      });
+
+      this.querySelectorAll<HTMLElement>(":scope > [role='tabpanel'] > [data-fallback-title]").forEach((title) => {
+        title.hidden = true;
+      });
+      activate(0);
+      tablist.hidden = false;
+    }
+  }
+
+  if (!customElements.get("docs-tabs")) {
+    customElements.define("docs-tabs", DocsTabs);
+  }
+</script>

@@ -1,0 +1,12 @@
+---
+interface Props {
+  source: string;
+}
+
+const { source } = Astro.props;
+---
+
+<footer class="mt-8 flex flex-wrap justify-between gap-3 text-xs text-muted">
+  <a class="hover:text-accent" href={source + "/tree/main/docs"}>source</a>
+  <p class="w-full">Independent project. Not affiliated with Artifact Hub or the CNCF.</p>
+</footer>

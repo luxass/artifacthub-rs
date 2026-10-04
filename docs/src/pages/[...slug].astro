@@ -1,0 +1,83 @@
+---
+import { getCollection, render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import Installation from "../components/Installation.astro";
+import "../styles/global.css";
+
+export async function getStaticPaths() {
+  return (await getCollection("docs")).map((entry) => ({
+    params: { slug: entry.id === "index" ? undefined : entry.id },
+    props: { id: entry.id },
+  }));
+}
+
+interface Props {
+  id: CollectionEntry<"docs">["id"];
+}
+
+const entries = (await getCollection("docs")).sort((left, right) => left.data.order - right.data.order);
+const entry = entries.find((entry) => entry.id === Astro.props.id);
+if (!entry) {
+  throw new Error(`Documentation entry not found: ${Astro.props.id}`);
+}
+const navigation = entries.map((entry) => ({
+  href: entry.id === "index" ? "/" : `/${entry.id}/`,
+  label: entry.data.navTitle,
+}));
+const { Content } = await render(entry);
+const currentPath = Astro.url.pathname;
+const currentIndex = navigation.findIndex((item) => item.href === currentPath);
+const previous = navigation[currentIndex - 1];
+const next = navigation[currentIndex + 1];
+const source = "https://github.com/luxass/artifacthub-rs";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={entry.data.description} />
+    <meta name="theme-color" content="#f3f7f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#101b1a" media="(prefers-color-scheme: dark)" />
+    <title>{entry.id === "index" ? entry.data.title : `${entry.data.title} | artifacthub-mcp`}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="bg-background font-sans text-[15px] leading-[1.7] text-foreground">
+    <a class="fixed -top-24 left-4 z-10 bg-background px-3 py-2 text-accent focus:top-4" href="#content">Skip to content</a>
+    <div class="mx-auto max-w-180 px-5 py-6 sm:px-6">
+      <Header navigation={navigation} source={source} />
+      <main id="content" tabindex="-1" class="min-w-0">
+        <div class="mb-8">
+          <h1 class="text-[28px] leading-tight font-semibold tracking-tight">{entry.data.title}</h1>
+          <p class="mt-2 text-muted">{entry.data.description}</p>
+        </div>
+        <article class="prose">
+          {entry.id === "index" && <Installation />}
+          <Content />
+        </article>
+        <nav class="mt-10 flex justify-between gap-4 border-t border-line pt-4 text-sm text-accent" aria-label="Previous and next pages">
+          {
+            previous ? (
+              <a class="hover:underline" href={previous.href}>
+                ← {previous.label}
+              </a>
+            ) : (
+              <span />
+            )
+          }
+          {
+            next && (
+              <a class="text-right hover:underline" href={next.href}>
+                {next.label} →
+              </a>
+            )
+          }
+        </nav>
+      </main>
+      <Footer source={source} />
+    </div>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+---
+import Code from "astro/components/Code.astro";
+import type { ComponentProps } from "astro/types";
+import Tabs from "./Tabs.astro";
+
+const highlighting = {
+  themes: { light: "github-light", dark: "github-dark" },
+  defaultColor: false,
+  wrap: true,
+} satisfies Pick<ComponentProps<typeof Code>, "themes" | "defaultColor" | "wrap">;
+---
+
+<p>
+  <code>artifacthub-mcp</code> is an independent server that gives your assistant 15 read-only tools for the{" "}
+  <a href="https://artifacthub.io">Artifact Hub</a> API. It runs locally over stdio,
+  needs no API key, and does not install charts or access your cluster.
+</p>
+
+<section aria-labelledby="install-the-server">
+  <h2 id="install-the-server">Install the server</h2>
+  <Tabs
+    id="installation"
+    label="Installation method"
+    tabs={[
+      { id: "homebrew", label: "Homebrew" },
+      { id: "cargo", label: "Cargo" },
+      { id: "binaries", label: "Binaries" },
+    ]}
+  >
+    <Fragment slot="homebrew">
+      <p>For macOS and Linux:</p>
+      <Code code={"brew tap luxass/tap\nbrew install luxass/tap/artifacthub-mcp"} lang="sh" {...highlighting} />
+    </Fragment>
+    <Fragment slot="cargo">
+      <p>With a Rust toolchain installed:</p>
+      <Code code="cargo install --locked artifacthub-mcp" lang="sh" {...highlighting} />
+    </Fragment>
+    <Fragment slot="binaries">
+      <p>
+        Download a pre-built binary for Linux or macOS from{" "}
+        <a href="https://github.com/luxass/artifacthub-rs/releases">GitHub Releases</a>{" "}
+        and put it on your <code>PATH</code>.
+      </p>
+    </Fragment>
+  </Tabs>
+  <p>After installation, check that your shell can find the binary:</p>
+  <Code code={"artifacthub-mcp --version\nartifacthub-mcp --help"} lang="sh" {...highlighting} />
+</section>

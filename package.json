@@ -1,0 +1,17 @@
+{
+  "name": "artifacthub-development",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm --filter @artifacthub-rs/docs build",
+    "dev": "pnpm --filter @artifacthub-rs/docs dev",
+    "preview": "pnpm --filter @artifacthub-rs/docs preview",
+    "check": "pnpm run typecheck",
+    "typecheck": "pnpm --filter @artifacthub-rs/docs check"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@12.4.2"
+}

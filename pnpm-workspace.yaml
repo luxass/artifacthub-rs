@@ -1,0 +1,28 @@
+packages:
+  - "docs"
+
+minimumReleaseAge: 5760
+ignoreScripts: true
+strictDepBuilds: true
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
+
+catalogs:
+  astro:
+    astro: 7.3.5
+    "@astrojs/check": 0.9.10
+    "@astrojs/cloudflare": 14.3.3
+
+  tailwind:
+    tailwindcss: 4.1.18
+    "@tailwindcss/postcss": 4.1.18
+
+  tooling:
+    typescript: 6.0.3
+    wrangler: 4.144.0
+
+  types:
+    "@types/node": 26.4.1
+
+overrides:
+  "@astrojs/check@0.9.10>chokidar": 5.0.0

@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-background: #f3f7f6;
+  --color-foreground: #13201f;
+  --color-muted: #61706f;
+  --color-accent: #136f63;
+  --color-surface: #ffffff;
+  --color-line: #d2dddd;
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+    @apply scroll-pt-6;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-4 outline-accent;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background: #101b1a;
+      --color-foreground: #e4eeec;
+      --color-muted: #a0b3af;
+      --color-accent: #71d5bd;
+      --color-surface: #182623;
+      --color-line: #344943;
+    }
+  }
+}
+
+@layer components {
+  .prose {
+    overflow-wrap: anywhere;
+  }
+
+  .prose > :first-child {
+    margin-top: 0;
+  }
+
+  .prose > :last-child {
+    margin-bottom: 0;
+  }
+
+  .prose h2 {
+    @apply mt-9 mb-3 text-xl leading-7 font-semibold;
+  }
+
+  .prose h3 {
+    @apply mt-7 mb-2 text-base font-semibold;
+  }
+
+  .prose p {
+    @apply my-4;
+  }
+
+  .prose a {
+    @apply text-accent underline underline-offset-4 hover:decoration-2;
+  }
+
+  .prose ul {
+    @apply my-4 list-disc pl-5;
+  }
+
+  .prose ol {
+    @apply my-4 list-decimal pl-5;
+  }
+
+  .prose li {
+    @apply my-2 pl-1;
+  }
+
+  .prose blockquote {
+    @apply my-5 border-l-2 border-line pl-4 text-foreground;
+  }
+
+  .prose details {
+    @apply border-b border-line py-3;
+  }
+
+  .prose summary {
+    @apply cursor-pointer font-medium;
+  }
+
+  .prose details[open] > summary {
+    @apply mb-4;
+  }
+
+  .prose details > :last-child {
+    margin-bottom: 0;
+  }
+
+  .prose code {
+    @apply font-mono;
+    font-size: 0.9em;
+  }
+
+  .prose pre {
+    @apply my-5 overflow-x-auto rounded border border-line bg-surface p-4 text-[13px] leading-relaxed;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .prose pre code {
+    @apply bg-transparent p-0;
+    font-size: inherit;
+  }
+
+  .astro-code {
+    color: var(--shiki-light, var(--color-foreground));
+    background-color: var(--shiki-light-bg, var(--color-surface));
+  }
+
+  .astro-code span {
+    color: var(--shiki-light, inherit);
+  }
+
+  .prose table {
+    @apply my-5 w-full border-collapse text-sm;
+    table-layout: auto;
+  }
+
+  .prose th {
+    @apply text-left font-semibold;
+  }
+
+  .prose th,
+  .prose td {
+    @apply border-b border-line px-3 py-3 align-top;
+  }
+
+  .prose th:first-child,
+  .prose td:first-child {
+    padding-left: 0;
+  }
+
+  .prose th:last-child,
+  .prose td:last-child {
+    padding-right: 0;
+  }
+
+  @media (max-width: 639px) {
+    .prose th,
+    .prose td {
+      padding-right: 0.5rem;
+      padding-left: 0.5rem;
+    }
+
+    .prose th:first-child,
+    .prose td:first-child {
+      padding-left: 0;
+    }
+
+    .prose th:last-child,
+    .prose td:last-child {
+      padding-right: 0;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .astro-code {
+      color: var(--shiki-dark, var(--color-foreground));
+      background-color: var(--shiki-dark-bg, var(--color-surface));
+    }
+
+    .astro-code span {
+      color: var(--shiki-dark, inherit);
+    }
+  }
+}
