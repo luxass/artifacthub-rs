@@ -13,8 +13,20 @@ The server uses stdio. Configure your client to launch `artifacthub-mcp` as a co
 <summary>Claude Code</summary>
 
 ```sh
-claude mcp add artifacthub -- artifacthub-mcp
+claude mcp add --transport stdio artifacthub -- artifacthub-mcp
 ```
+
+This defaults to local scope for the current project. For all projects, use:
+
+```sh
+claude mcp add --transport stdio --scope user artifacthub -- artifacthub-mcp
+```
+
+For a shared project configuration, use `--scope project` instead. This writes to `.mcp.json`; users must approve the server before connecting.
+
+Check the registration with `claude mcp get artifacthub`, then use `/mcp` inside Claude Code to check its connection.
+
+See the [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp).
 
 </details>
 
@@ -25,12 +37,16 @@ claude mcp add artifacthub -- artifacthub-mcp
 codex mcp add artifacthub -- artifacthub-mcp
 ```
 
-Or add this to `~/.codex/config.toml`:
+The CLI stores this in your Codex user configuration, `~/.codex/config.toml` by default. You can also add it manually:
 
 ```toml
 [mcp_servers.artifacthub]
 command = "artifacthub-mcp"
 ```
+
+Check the registration with `codex mcp get artifacthub`, then use `/mcp` inside Codex to check its connection.
+
+See the [Codex MCP documentation](https://developers.openai.com/codex/mcp/).
 
 </details>
 
@@ -74,7 +90,19 @@ Add this entry to `opencode.json`:
 <details>
 <summary>VS Code</summary>
 
-Add a server entry to your workspace's `.vscode/mcp.json`:
+For new configurations, VS Code recommends a portable `.mcp.json` at your project root:
+
+```json
+{
+  "mcpServers": {
+    "artifacthub": {
+      "command": "artifacthub-mcp"
+    }
+  }
+}
+```
+
+The VS Code-specific `.vscode/mcp.json` format is still supported for compatibility:
 
 ```json
 {
@@ -89,7 +117,9 @@ Add a server entry to your workspace's `.vscode/mcp.json`:
 
 </details>
 
-If your editor cannot find the binary, set `command` to its absolute path. Restart or reconnect the MCP server after editing the client configuration.
+Check that `artifacthub-mcp --version` works before connecting a client. If your editor cannot find the binary, set `command` to its absolute path. For OpenCode, replace the first item in the `command` array. Restart or reconnect the MCP server after editing the client configuration.
+
+Adding a registration does not verify a working MCP connection. Check the server status in your client before asking it to use the tools.
 
 ## Make your first lookup
 
