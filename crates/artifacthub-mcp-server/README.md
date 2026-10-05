@@ -9,7 +9,8 @@ This helps your assistant use the chart information that Artifact Hub publishes 
 ### Homebrew (macOS and Linux)
 
 ```sh
-brew install luxass/homebrew-tap/artifacthub-mcp
+brew tap luxass/tap
+brew install luxass/tap/artifacthub-mcp
 ```
 
 ### Cargo
@@ -24,7 +25,7 @@ Pre-built binaries are available for Linux and macOS at [github.com/luxass/artif
 
 ## Setup
 
-Add to your MCP client configuration:
+For clients that use the `mcpServers` format, add this to their MCP configuration file. Other clients use different formats; see the examples below.
 
 ```json
 {
@@ -56,10 +57,12 @@ artifacthub-mcp --exclude-tools get_package_star_stats,get_package_security_repo
 Add via the Claude Code CLI:
 
 ```bash
-claude mcp add artifacthub artifacthub-mcp
+claude mcp add --transport stdio artifacthub -- artifacthub-mcp
 ```
 
-Or add to your `~/.claude/settings.json`:
+This defaults to local scope for the current project. Add `--scope user` before the server name to register it across projects, or use `--scope project` to write a shared `.mcp.json`.
+
+For manual project setup, add this to `.mcp.json` at your project root, not `~/.claude/settings.json`:
 
 ```json
 {
@@ -79,7 +82,7 @@ Or add to your `~/.claude/settings.json`:
 Add via the Codex CLI:
 
 ```bash
-codex mcp add artifacthub artifacthub-mcp
+codex mcp add artifacthub -- artifacthub-mcp
 ```
 
 Or add to your `~/.codex/config.toml`:
@@ -94,7 +97,17 @@ command = "artifacthub-mcp"
 <details>
 <summary>Cursor</summary>
 
-Go to `Cursor Settings` → `MCP` → `Add new MCP Server`. Set type to `command` with the command `artifacthub-mcp`.
+Add this to `.cursor/mcp.json` for the current project or `~/.cursor/mcp.json` for all projects:
+
+```json
+{
+  "mcpServers": {
+    "artifacthub": {
+      "command": "artifacthub-mcp"
+    }
+  }
+}
+```
 
 </details>
 
@@ -123,21 +136,27 @@ For quick installation, use one of the one-click install buttons below...
 
 [![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=artifacthub&config=%7B%22command%22%3A%22artifacthub-mcp%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=artifacthub&config=%7B%22command%22%3A%22artifacthub-mcp%22%7D&quality=insiders)
 
-For manual installation, add to your User Settings (JSON):
+For manual installation, add this to `.mcp.json` at your project root:
 
 ```json
 {
-  "mcp": {
-    "servers": {
-      "artifacthub": {
-        "command": "artifacthub-mcp"
-      }
+  "mcpServers": {
+    "artifacthub": {
+      "command": "artifacthub-mcp"
     }
   }
 }
 ```
 
+For user-profile configuration, run **MCP: Open User Configuration** and add the server to the file's top-level `servers` object.
+
 </details>
+
+Check that `artifacthub-mcp --version` works before connecting a client. If the client cannot find the binary, use its absolute path. OpenCode takes a command array, so replace its first item.
+
+Registering the server does not test the connection. In Claude Code or Codex, use `/mcp` to check its status.
+
+The [setup docs](https://artifacthub-mcp.luxass.dev) have more details. Client references: [Claude Code](https://code.claude.com/docs/en/mcp), [Codex](https://developers.openai.com/codex/mcp/), [Cursor](https://cursor.com/docs/context/mcp), [OpenCode](https://opencode.ai/docs/mcp-servers/), and [VS Code](https://code.visualstudio.com/docs/copilot/customization/mcp-servers).
 
 ## Tools
 
