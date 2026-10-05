@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Hub vs MCP diff. Edit the comparison block; run with `just compare-mcp`."""
 
+import argparse
+import atexit
 import json
 import subprocess
 import sys
@@ -9,7 +11,11 @@ import urllib.error
 import urllib.request
 
 HUB = "https://artifacthub.io/api/v1"
-BIN = "./target/debug/artifacthub-mcp"
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--bin", default="./target/debug/artifacthub-mcp")
+parser.add_argument("--protocol-only", action="store_true", help="Check discovery without contacting Artifact Hub")
+args = parser.parse_args()
+BIN = args.bin
 MAX_RETRIES = 3
 RETRY_BACKOFF_S = [1, 2]
 
@@ -105,11 +111,30 @@ sys.excepthook = report_error
 proc = subprocess.Popen(
     [BIN], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1
 )
+def stop_server():
+    if proc.poll() is None:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+
+
+atexit.register(stop_server)
 request_id = 0
 
 
 def rpc(method, params):
     global request_id
+    params = {
+        **params,
+        "_meta": {
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientCapabilities": {},
+            "io.modelcontextprotocol/clientInfo": {"name": "compare", "version": "1"},
+        },
+    }
     request_id += 1
     proc.stdin.write(
         json.dumps(
@@ -144,7 +169,9 @@ def rpc(method, params):
                 file=sys.stderr,
             )
             raise SystemExit(2)
-        if "id" in response:
+        if response.get("id") == request_id:
+            if "error" in response:
+                raise RuntimeError(f"MCP {method} failed: {response['error']}")
             return response["result"]
 
 
@@ -160,18 +187,35 @@ def compare(*, tool, url, arguments, expected):
     return False
 
 
-rpc(
-    "initialize",
-    {
-        "protocolVersion": "2025-11-25",
-        "capabilities": {},
-        "clientInfo": {"name": "compare", "version": "1"},
-    },
-)
-proc.stdin.write(
-    json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n"
-)
-proc.stdin.flush()
+# Modern MCP uses discovery and per-request context instead of initialize.
+initialization = rpc("server/discover", {})
+if not isinstance(initialization.get("capabilities", {}).get("tools"), dict):
+    raise RuntimeError(f"MCP discovery did not advertise tools: {initialization}")
+negotiated_version = "2026-07-28"
+if negotiated_version not in initialization.get("supportedVersions", []):
+    raise RuntimeError(f"MCP discovery did not advertise {negotiated_version}: {initialization}")
+
+discovery = rpc("tools/list", {})
+if negotiated_version == "2026-07-28":
+    ttl = discovery.get("ttlMs")
+    if type(ttl) is not int or ttl < 0:
+        raise RuntimeError(f"Modern tools/list requires a nonnegative integer ttlMs: {discovery}")
+    if discovery.get("cacheScope") not in {"public", "private"}:
+        raise RuntimeError(f"Modern tools/list requires cacheScope: {discovery}")
+    if discovery.get("resultType") != "complete":
+        raise RuntimeError(f"Modern tools/list requires resultType=complete: {discovery}")
+tools = discovery.get("tools")
+if not isinstance(tools, list) or not tools:
+    raise RuntimeError(f"MCP tools/list returned no tools: {discovery}")
+for tool in tools:
+    if not isinstance(tool.get("name"), str) or tool.get("inputSchema", {}).get("type") != "object":
+        raise RuntimeError(f"Invalid MCP tool declaration: {tool}")
+info = rpc("tools/call", {"name": "get_server_info", "arguments": {}})
+if info.get("isError") or info.get("structuredContent", {}).get("name") != "artifacthub-mcp":
+    raise RuntimeError(f"MCP get_server_info failed: {info}")
+print(f"ok MCP discovery: protocol={negotiated_version}, tools={len(tools)}")
+if args.protocol_only:
+    raise SystemExit(0)
 
 nginx = hub_json("/packages/helm/bitnami/nginx")
 nginx_expected = {
