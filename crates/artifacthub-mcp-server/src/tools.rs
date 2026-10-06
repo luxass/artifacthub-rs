@@ -18,8 +18,14 @@ pub mod validation;
 
 use std::collections::HashSet;
 
+use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::handler::server::wrapper::Json;
-use rmcp::model::{Implementation, ServerCapabilities, ServerInfo};
+use rmcp::model::{
+    CacheScope, Implementation, ListToolsResult, PaginatedRequestParams, ProtocolVersion,
+    ServerCapabilities, ServerInfo,
+};
+use rmcp::service::RequestContext;
+use rmcp::{ErrorData, RoleServer};
 use rmcp::{ServerHandler, handler::server::wrapper::Parameters, tool, tool_handler, tool_router};
 
 use artifacthub_client::client::ArtifactHubClient;
@@ -55,6 +61,16 @@ pub struct ArtifactHubServer {
 }
 
 impl ArtifactHubServer {
+    fn enabled_tool_router(&self) -> ToolRouter<Self> {
+        let mut router = Self::tool_router();
+        for name in ALL_TOOL_NAMES {
+            if !self.enabled_tools.contains(*name) {
+                router.disable_route(*name);
+            }
+        }
+        router
+    }
+
     /// Checks if a tool is enabled by name.
     pub fn is_tool_enabled(&self, name: &str) -> bool {
         self.enabled_tools.contains(name)
@@ -284,12 +300,27 @@ impl ArtifactHubServer {
     }
 }
 
-#[tool_handler]
+#[tool_handler(router = self.enabled_tool_router())]
 impl ServerHandler for ArtifactHubServer {
+    async fn list_tools(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<ListToolsResult, ErrorData> {
+        let mut result = ListToolsResult::with_all_items(self.enabled_tool_router().list_all());
+        if context
+            .protocol_version()
+            .is_some_and(|version| version >= ProtocolVersion::V_2026_07_28)
+        {
+            // Do not advertise freshness across server restarts or startup filter changes.
+            result = result.with_ttl_ms(0).with_cache_scope(CacheScope::Private);
+        }
+        Ok(result)
+    }
+
     fn get_info(&self) -> ServerInfo {
-        ServerInfo::new(ServerCapabilities::default()).with_server_info(Implementation::new(
-            "artifacthub-mcp",
-            env!("CARGO_PKG_VERSION"),
-        ))
+        ServerInfo::new(ServerCapabilities::builder().enable_tools().build()).with_server_info(
+            Implementation::new("artifacthub-mcp", env!("CARGO_PKG_VERSION")),
+        )
     }
 }
