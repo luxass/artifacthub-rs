@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.12](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.11...artifacthub-mcp@0.2.12) - 2026-10-06
+
+### 🐛 Bug Fixes
+
+- *(mcp)* restore tool discovery for capability-aware clients ([#46](https://github.com/luxass/artifacthub-rs/pull/46)) (by @luxass)
+
+### 📚 Documentation
+
+- update installation instructions and client configuration details ([#42](https://github.com/luxass/artifacthub-rs/pull/42)) (by @luxass)
+
+### Contributors
+
+* @luxass
+
 ## [0.2.11](https://github.com/luxass/artifacthub-rs/compare/artifacthub-mcp@0.2.10...artifacthub-mcp@0.2.11) - 2026-09-19
 
 ### 🐛 Bug Fixes
