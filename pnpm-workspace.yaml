@@ -14,15 +14,15 @@ catalogs:
     "@astrojs/cloudflare": 14.3.3
 
   tailwind:
-    tailwindcss: 4.1.18
-    "@tailwindcss/postcss": 4.1.18
+    tailwindcss: 4.3.3
+    "@tailwindcss/postcss": 4.3.3
 
   tooling:
     typescript: 6.0.3
-    wrangler: 4.144.0
+    wrangler: 4.147.0
 
   types:
-    "@types/node": 26.4.1
+    "@types/node": 26.6.4
 
 overrides:
   "@astrojs/check@0.9.10>chokidar": 5.0.0
