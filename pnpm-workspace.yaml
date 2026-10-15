@@ -18,7 +18,7 @@ catalogs:
     "@tailwindcss/postcss": 4.1.18
 
   tooling:
-    typescript: 6.0.3
+    typescript: 7.0.2
     wrangler: 4.144.0
 
   types:
