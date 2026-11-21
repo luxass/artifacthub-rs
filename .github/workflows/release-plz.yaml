@@ -26,12 +26,12 @@ jobs:
           persist-credentials: false
 
       - name: setup rust
-        uses: oxc-project/setup-rust@3d6fb132fbe7cdcb66bf8ec193911c2945369d12 # v1.0.17
+        uses: oxc-project/setup-rust@12a52e3caf7bac9d8b9ca550a82c425ed6343aee # v1.0.18
         with:
           restore-cache: false
 
       - name: create github token from app
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         id: generate-token
         with:
           owner: luxass
@@ -42,6 +42,6 @@ jobs:
           permission-pull-requests: write
 
       - name: run release-plz
-        uses: release-plz/action@aec534bbd8631793b9b3b8f1ee6cd886c322e17f # v0.5.133
+        uses: release-plz/action@66b324fd6c72d05d2a08568492ecdd62bfb8a62b # v0.5.148
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
