@@ -9,7 +9,7 @@ trustPolicy: no-downgrade
 
 catalogs:
   astro:
-    astro: 7.3.5
+    astro: 7.4.7
     "@astrojs/check": 0.9.10
     "@astrojs/cloudflare": 14.3.3
 
@@ -26,3 +26,6 @@ catalogs:
 
 overrides:
   "@astrojs/check@0.9.10>chokidar": 5.0.0
+minimumReleaseAgeExclude:
+  # Renovate security update: astro@7.4.7
+  - astro@7.4.7
